@@ -8,6 +8,7 @@ A tkinter GUI for helping users to convert IBIS models into SPICE models
 # ---------------------------------------------------------------------------
 
 from pybis2spice import pybis2spice
+from pybis2spice import version
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
@@ -15,18 +16,50 @@ from tkinter import filedialog
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 import time
 import logging
+import webbrowser
 
 _width = 740
 _height = 450
-_gui_version = '0.1.0'
+_gui_version = version.get_version()
 logging.basicConfig(level=logging.INFO)
 
 
 # ---------------------------------------------------------------------------
 # Callback Functions
 # ---------------------------------------------------------------------------
+def help_callback(url):
+    webbrowser.open_new(url)
+
+
 def help_message():
-    messagebox.showinfo(title="Help", message="Hello")
+    help_window = tk.Toplevel(window)
+    help_window.title(f" Help")
+    help_window.minsize(550, 250)
+    help_window.resizable(False, False)
+    help_window.grab_set()
+    help_window.geometry(f"+{window.winfo_rootx() + 50}+{window.winfo_rooty() + 50}")
+    help_window.iconbitmap('icon.ico')
+
+    message1 = f"\n\nIBIS to SPICE Converter version {_gui_version}\n\n\n" \
+              "Please report any bugs and issues at the link below.\n" \
+              "Detailed information on how the issue can be reproduced should be provided including \n" \
+              "any IBIS files used and version number of this program."
+
+    url1 = "https://github.com/kamratia1/pybis2spice/issues/"
+    lbl1 = tk.Label(help_window, text=f"{message1}")
+    link1 = tk.Label(help_window, text=url1, fg='#0000EE')
+    link1.bind("<Button-1>", lambda e: help_callback(url1))
+
+    message2 = "Help on how to use this tool can be found within the README at "
+    url2 = "https://github.com/kamratia1/pybis2spice/\n\n"
+    lbl2 = tk.Label(help_window, text=f"\n\n{message2}")
+    link2 = tk.Label(help_window, text=url1, fg='#0000EE')
+    link2.bind("<Button-1>", lambda e: help_callback(url2))
+
+    lbl1.pack(side=tk.TOP)
+    link1.pack(side=tk.TOP)
+    lbl2.pack(side=tk.TOP)
+    link2.pack(side=tk.TOP)
 
 
 def browse():
@@ -100,6 +133,7 @@ def new_window(ibis_data_model):
     data_window.minsize(700, 700)
     data_window.grab_set()
     data_window.geometry(f"+{window.winfo_rootx() + 50}+{window.winfo_rooty() + 50}")
+    data_window.iconbitmap('icon.ico')
     # data_window.resizable(True, True)
 
     tab_parent = ttk.Notebook(data_window)
@@ -202,7 +236,8 @@ def print_values():
 window = tk.Tk()
 window.geometry(f"{_width}x{_height}")
 window.resizable(False, False)
-window.title(f"IBIS to SPICE converter - v{_gui_version}")
+window.title(f" IBIS to SPICE converter - version {_gui_version}")
+window.iconbitmap('icon.ico')
 
 # ---------------------------------------------------------------------------
 # Frame 1: Browse for IBIS file
@@ -235,9 +270,6 @@ list_component.place(x=10, y=35)
 
 list_model = tk.Listbox(master=frame2, exportselection=0, width=45, height=10)
 list_model.place(x=_width/2, y=35)
-
-#scrollbar = tk.Scrollbar(frame2, orient=tk.VERTICAL, command=list_model.yview)
-#scrollbar.place(x=620, y=35, width=15, height=165)
 
 btn2 = tk.Button(master=frame2, text="Check Model", command=check_model)
 btn2.place(x=10, y=205)

@@ -131,3 +131,7 @@ dmypy.json
 pybis2spice/scratch_space.py
 .idea/*
 bin/*
+gui/build/*
+gui/dist/*
+gui/pybis2spice-gui.spec
+test/scratch.py
