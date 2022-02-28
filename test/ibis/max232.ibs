@@ -1,0 +1,670 @@
+|************************************************************************
+| IBIS file max232.ibs created at Maxim Integrated Products
+|************************************************************************
+|
+[IBIS ver]       2.1
+[File name]      max232.ibs
+[File Rev]       1.0
+[Date]           September 24, 2002 
+[Source]         Data was acquired from HSpice simulation and bench 
+                 measurements. Rise and fall ramps were taken through 
+                 HSpice simulation and IV curves were taken on the bench 
+                 using a Semiconductor Parameter Analyzer.
+[Notes]          This is an EIA-TIA RS232 Transceiver. 
+[Disclaimer]     Maxim Integrated Products hereby grants the user of this 
+                 IBIS model a non-exclusive, nontransferable license to use 
+                 this IBIS model under the following terms. Before using 
+                 this IBIS model, the user should read this license. If the 
+                 user does not accept these terms, the IBIS model should be 
+                 returned to Maxim Integrated Products within 30 days. 
+                 The user is granted this license only to use the IBIS model 
+                 and is not granted rights to sell, load, rent, lease or 
+                 license the IBIS model in whole or in part, or in modified 
+                 form to anyone other than user. User may modify the IBIS 
+                 model to suit its specific applications but rights to 
+                 derivative works and such modifications shall belong to 
+                 Maxim Integrated Products. This IBIS model is provided on 
+                 an "AS IS" basis and Maxim Integrated Products makes 
+                 absolutely no warranty with respect to the information 
+                 contained herein.MAXIM INTEGRATED PRODUCTS DISCLAIMS AND 
+                 CUSTOMER WAIVES ALL WARRANTIES, EXPRESS OR IMPLIED, 
+                 INCLUDING WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A 
+                 PARTICULAR PURPOSE. The entire risk as to quality and 
+                 performance is with the Customer. ACCORDINGLY, IN NO EVENT  
+                 SHALL THE COMPANY BE LIABLE FOR ANY DAMAGES, WHETHER IN 
+                 CONTRACT OR TORT,INCLUDING ANY LOST PROFITS OR OTHER 
+                 INCIDENTAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES 
+                 ARISING OUT OF THE USE OR APPLICATION OF THE IBIS model 
+                 provided in this package.Further, Maxim Integrated Products 
+                 reserves the right to make changes without notice to any  
+                 product herein to improve reliability, function, or design. 
+                 Maxim Integrated Products does not convey any license under 
+                 patent rights or any other intellectual property rights, 
+                 including those of third parties. 
+                 Maxim Integrated Products is not obligated to provide 
+                 maintenance or support for the licensed IBIS model. 
+[Copyright]      Copyright of Maxim Integrated Products. 
+|
+|************************************************************************
+|                            Component MAX232
+|************************************************************************
+|
+[Component]      MAX232
+[Manufacturer]   Maxim Integrated Products  
+[Package]
+| variable       typ                 min                 max
+R_pkg            48.9m               45.4m               55.5m
+L_pkg            1.80nH              1.57nH              2.19nH
+C_pkg            0.319pF             0.252pF             0.419pF
+|
+[Pin]  signal_name      model_name              R_pin     L_pin     C_pin
+|1      C1+              C1N
+|2      V+               V+
+|3      C1-              C1N
+|4      C2+              C2P
+|5      C2-              C2N
+|6      V-               V-
+7      T2OUT            TOUT                    
+8      R2IN             RIN                     
+9      R2OUT            ROUT                    
+10     T2IN             TIN                     
+11     T1IN             TIN                     
+12     R1OUT            ROUT                    
+13     R1IN             RIN                     
+14     T1OUT            TOUT                    
+15     GND              GND                     
+16     VCC              POWER                   
+|
+|
+|****************************************************************************
+|                   Driver Receiver Input
+|****************************************************************************
+|
+[Model]          RIN
+|Signals         R1IN, R2IN
+Model_type       Input
+Enable           Active-High
+Vinl = 0.8V
+Vinh = 2.0V
+C_comp                    0.96pF              0.53pF              1.60pF
+[Temperature Range]       25                  -40                 85
+[Voltage Range]           5.00V               4.50V               5.50V 
+[POWER Clamp Reference]   5.00V               4.50V               5.50V 
+[GND Clamp Reference]     0.00V               0.00V               0.00V
+|
+[POWER_clamp]
+|-------------------------------------------------------------
+| Note that the[POWER_clamp]voltage table is referenced to Vcc
+| and is calculated using Vtable=Vcc - Vmeasured.
+|-------------------------------------------------------------
+| V(V)  I(typ)          I(min)  I(max)
+  -0.1  1.2599mA        NA      NA
+  -0.3  1.3049mA        NA      NA
+  -0.5  1.3500mA        NA      NA
+  -0.7  1.3950mA        NA      NA
+  -0.9  1.4400mA        NA      NA
+  -1.1  1.4850mA        NA      NA
+  -1.3  1.5301mA        NA      NA
+  -1.5  1.5751mA        NA      NA
+  -1.7  1.6199mA        NA      NA
+  -1.9  1.6652mA        NA      NA
+  -2.1  1.7101mA        NA      NA
+  -2.3  1.7553mA        NA      NA
+  -2.5  1.8000mA        NA      NA
+  -2.7  1.8451mA        NA      NA
+  -2.9  1.8900mA        NA      NA
+  -3.1  1.9353mA        NA      NA
+  -3.3  1.9801mA        NA      NA
+  -3.5  2.0250mA        NA      NA
+  -3.7  2.0702mA        NA      NA
+  -3.9  2.1152mA        NA      NA
+  -4.1  2.1601mA        NA      NA
+  -4.3  2.2051mA        NA      NA
+  -4.5  2.2500mA        NA      NA
+|
+[GND_clamp]
+|-------------------------------------------------------------
+| Note that the[GND_clamp]voltage table is referenced to Gnd. 
+|-------------------------------------------------------------
+| V(V)  I(typ)          I(min)  I(max)
+  -5.0  -1.1266mA       NA      NA
+  -4.8  -1.0815mA       NA      NA
+  -4.6  -1.0365mA       NA      NA
+  -4.4  -991.64uA       NA      NA
+  -4.2  -946.71uA       NA      NA
+  -4.0  -901.61uA       NA      NA
+  -3.8  -856.71uA       NA      NA
+  -3.6  -811.58uA       NA      NA
+  -3.4  -766.64uA       NA      NA
+  -3.2  -721.52uA       NA      NA
+  -3.0  -676.59uA       NA      NA
+  -2.8  -631.50uA       NA      NA
+  -2.6  -586.56uA       NA      NA
+  -2.4  -541.60uA       NA      NA
+  -2.2  -496.51uA       NA      NA
+  -2.0  -451.53uA       NA      NA
+  -1.8  -406.43uA       NA      NA
+  -1.6  -361.48uA       NA      NA
+  -1.4  -316.38uA       NA      NA
+  -1.2  -271.41uA       NA      NA 
+  -1.0  -226.46uA       NA      NA
+  -0.8  -181.34uA       NA      NA
+  -0.6  -136.39uA       NA      NA
+  -0.4  -91.257uA       NA      NA
+  -0.2  -46.306uA       NA      NA
+  0.0   -1.1615uA       NA      NA
+  0.2   43.933uA        NA      NA
+  0.4   88.885uA        NA      NA
+  0.6   133.83uA        NA      NA
+  0.8   179.00uA        NA      NA
+  1.0   223.92uA        NA      NA
+  1.2   269.05uA        NA      NA
+  1.4   314.00uA        NA      NA
+  1.6   359.13uA        NA      NA
+  1.8   404.11uA        NA      NA
+  2.0   449.23uA        NA      NA
+  2.2   494.19uA        NA      NA
+  2.4   539.31uA        NA      NA
+  2.6   584.28uA        NA      NA
+  2.8   629.24uA        NA      NA
+  3.0   674.36uA        NA      NA
+  3.2   719.30uA        NA      NA
+  3.4   764.44uA        NA      NA
+  3.6   809.40uA        NA      NA
+  3.8   854.55uA        NA      NA
+  4.0   899.51uA        NA      NA
+  4.2   944.65uA        NA      NA
+  4.4   989.64uA        NA      NA
+  4.6   1.03477mA       NA      NA
+  4.8   1.07976mA       NA      NA
+  5.0   1.12471mA       NA      NA
+  5.2   1.1699mA        NA      NA
+  5.4   1.2150mA        NA      NA
+|
+|End [Model] RIN
+|
+|****************************************************************************
+|                  Driver Transmitter Input
+|****************************************************************************
+|
+[Model]          TIN
+|Signals         T1IN, T2IN  
+Model_type       Input
+Enable           Active-High
+Vinl = 0.8V
+Vinh = 2.0V
+C_comp                    0.96pF              0.53pF              1.60pF
+[Temperature Range]       25                  -40                 85
+[Voltage Range]           5.00V               4.50V               5.50V 
+[POWER Clamp Reference]   5.00V               4.50V               5.50V 
+[GND Clamp Reference]     0.00V               0.00V               0.00V
+|
+[POWER_clamp]
+|-------------------------------------------------------------
+| Note that the[POWER_clamp]voltage table is referenced to Vcc
+| and is calculated using Vtable=Vcc - Vmeasured.
+| Also, the Semiconductor Parameter Analyzer (Force and Sense)
+| clamps the supply current to 100mA to protect the system.
+|-------------------------------------------------------------
+| V(V)  I(typ)          I(min)  I(max)
+  -0.1  2.2480uA        NA      NA
+  -0.2  4.1567uA        NA      NA
+  -0.3  6.1191uA        NA      NA
+  -0.4  8.1374uA        NA      NA
+  -0.5  10.2270uA       NA      NA
+  -0.6  12.356uA        NA      NA
+  -0.7  14.546uA        NA      NA
+  -0.8  16.795uA        NA      NA
+  -0.9  19.119uA        NA      NA
+  -1.0  21.510uA        NA      NA
+  -1.1  24.202uA        NA      NA
+  -1.2  27.991uA        NA      NA
+  -1.3  33.310uA        NA      NA
+  -1.4  40.787uA        NA      NA
+  -1.5  52.134uA        NA      NA
+  -1.6  85.288uA        NA      NA
+  -1.7  335.82uA        NA      NA
+  -1.8  1.7184mA        NA      NA
+  -1.9  6.8178mA        NA      NA
+  -2.0  17.221mA        NA      NA
+  -2.1  31.611mA        NA      NA
+  -2.2  48.615mA        NA      NA
+  -2.3  67.553mA        NA      NA
+  -2.4  87.594mA        NA      NA
+  -2.5  100.000mA       NA      NA
+  -5.0  100.000mA       NA      NA
+|
+[GND_clamp]
+|-------------------------------------------------------------
+| Note that the[GND_clamp]voltage table is referenced to Gnd.
+|-------------------------------------------------------------
+| V(V)  I(typ)          I(min)  I(max)
+  -5.0  -34.917uA       NA      NA
+  -4.9  -34.899uA       NA      NA
+  -4.8  -34.875uA       NA      NA
+  -4.7  -34.855uA       NA      NA
+  -4.6  -34.839uA       NA      NA
+  -4.5  -34.814uA       NA      NA
+  -4.4  -34.794uA       NA      NA
+  -4.3  -34.771uA       NA      NA
+  -4.2  -34.750uA       NA      NA
+  -4.1  -34.729uA       NA      NA
+  -4.0  -34.705uA       NA      NA
+  -3.9  -34.683uA       NA      NA
+  -3.8  -34.661uA       NA      NA
+  -3.7  -34.636uA       NA      NA
+  -3.6  -34.615uA       NA      NA
+  -3.5  -34.589uA       NA      NA
+  -3.4  -34.566uA       NA      NA
+  -3.3  -34.541uA       NA      NA
+  -3.2  -34.517uA       NA      NA
+  -3.1  -34.494uA       NA      NA
+  -3.0  -34.470uA       NA      NA
+  -2.9  -34.444uA       NA      NA
+  -2.8  -34.416uA       NA      NA
+  -2.7  -34.391uA       NA      NA
+  -2.6  -34.366uA       NA      NA
+  -2.5  -34.341uA       NA      NA
+  -2.4  -34.314uA       NA      NA
+  -2.3  -34.287uA       NA      NA
+  -2.2  -34.259uA       NA      NA
+  -2.1  -34.229uA       NA      NA
+  -2.0  -34.204uA       NA      NA
+  -1.9  -34.175uA       NA      NA
+  -1.8  -34.144uA       NA      NA
+  -1.7  -34.117uA       NA      NA
+  -1.6  -34.088uA       NA      NA
+  -1.5  -34.056uA       NA      NA
+  -1.4  -34.027uA       NA      NA
+  -1.3  -33.996uA       NA      NA
+  -1.2  -33.964uA       NA      NA
+  -1.1  -33.930uA       NA      NA
+  -1.0  -33.900uA       NA      NA
+  -0.9  -33.864uA       NA      NA
+  -0.8  -33.832uA       NA      NA
+  -0.7  -33.797uA       NA      NA
+  -0.6  -33.763uA       NA      NA
+  -0.5  -33.724uA       NA      NA
+  -0.4  -33.688uA       NA      NA
+  -0.3  -33.650uA       NA      NA
+  -0.2  -33.611uA       NA      NA
+  -0.1  -33.572uA       NA      NA
+  0.0   -33.529uA       NA      NA
+  0.1   -33.487uA       NA      NA
+  0.2   -33.443uA       NA      NA
+  0.3   -33.398uA       NA      NA
+  0.4   -33.350uA       NA      NA
+  0.5   -33.302uA       NA      NA
+  0.6   -33.248uA       NA      NA
+  0.7   -33.194uA       NA      NA
+  0.8   -33.134uA       NA      NA
+  0.9   -33.071uA       NA      NA
+  1.0   -33.003uA       NA      NA
+  1.1   -32.922uA       NA      NA
+  1.2   -32.832uA       NA      NA
+  1.3   -32.728uA       NA      NA
+  1.4   -32.607uA       NA      NA
+  1.5   -32.469uA       NA      NA
+  1.6   -32.302uA       NA      NA
+  1.7   -32.112uA       NA      NA
+  1.8   -31.886uA       NA      NA
+  1.9   -31.628uA       NA      NA
+  2.0   -31.327uA       NA      NA
+  2.1   -30.989uA       NA      NA
+  2.2   -30.606uA       NA      NA
+  2.3   -30.178uA       NA      NA
+  2.4   -29.700uA       NA      NA
+  2.5   -29.180uA       NA      NA
+  2.6   -28.610uA       NA      NA
+  2.7   -27.989uA       NA      NA
+  2.8   -27.320uA       NA      NA
+  2.9   -26.599uA       NA      NA
+  3.0   -25.825uA       NA      NA
+  3.1   -25.005uA       NA      NA
+  3.2   -24.137uA       NA      NA
+  3.3   -23.204uA       NA      NA
+  3.4   -22.229uA       NA      NA
+  3.5   -21.206uA       NA      NA
+  3.6   -20.128uA       NA      NA
+  3.7   -18.994uA       NA      NA
+  3.8   -17.812uA       NA      NA
+  3.9   -16.583uA       NA      NA
+  4.0   -15.303uA       NA      NA
+  4.1   -13.969uA       NA      NA
+  4.2   -12.575uA       NA      NA
+  4.3   -11.139uA       NA      NA
+  4.4   -9.6523uA       NA      NA
+  4.5   -8.1134uA       NA      NA
+  4.6   -6.5099uA       NA      NA
+  4.7   -4.8647uA       NA      NA
+  4.8   -3.1693uA       NA      NA
+  4.9   -1.4208uA       NA      NA
+|
+|End [Model] TIN
+|
+|****************************************************************************
+|                      Driver Receiver Output
+|****************************************************************************
+|
+[Model]          ROUT  
+|Signals         R1OUT, R2OUT
+Model_type       Output
+Polarity         Inverting
+Vmeas = 2.5V
+C_comp                    0.96pF              0.53pF              1.60pF
+[Temperature Range]       25                   -40                85
+[Voltage Range]           5.00V               4.50V               5.50V
+[Pullup Reference]        5.00V               4.50V               5.50V
+[Pulldown Reference]      0.00V               0.00V               0.00V
+|
+|****************************************************************************
+|
+[Pullup]
+|-------------------------------------------------------------
+| Note that the[Pulldown]voltage table is referenced to Vcc
+| and is calculated using Vtable=Vcc - Vmeasured.
+| Also, the Semiconductor Parameter Analyzer (Force and Sense)
+| clamps the supply current to 100mA to protect the system.
+|-------------------------------------------------------------
+| V(V)  I(typ)          I(min)  I(max)
+  10.0  -100.000mA      NA      NA
+  6.8   -100.000mA      NA      NA
+  6.6   -92.536mA       NA      NA
+  6.4   -72.953mA       NA      NA
+  6.2   -53.259mA       NA      NA
+  6.0   -33.684mA       NA      NA
+  5.8   -15.563mA       NA      NA
+  5.6   -7.4012mA       NA      NA
+  5.4   -6.9869mA       NA      NA
+  5.2   -6.9229mA       NA      NA
+  5.0   -6.8662mA       NA      NA
+  4.8   -6.8092mA       NA      NA
+  4.6   -6.7488mA       NA      NA
+  4.4   -6.6840mA       NA      NA
+  4.2   -6.6130mA       NA      NA
+  4.0   -6.5341mA       NA      NA
+  3.8   -6.4447mA       NA      NA
+  3.6   -6.3414mA       NA      NA
+  3.4   -6.2207mA       NA      NA
+  3.2   -6.0799mA       NA      NA
+  3.0   -5.9151mA       NA      NA
+  2.8   -5.7250mA       NA      NA
+  2.6   -5.5068mA       NA      NA
+  2.4   -5.2604mA       NA      NA
+  2.2   -4.9841mA       NA      NA
+  2.0   -4.6768mA       NA      NA
+  1.8   -4.3400mA       NA      NA
+  1.6   -3.9712mA       NA      NA
+  1.4   -3.5739mA       NA      NA
+  1.2   -3.1449mA       NA      NA
+  1.0   -2.6882mA       NA      NA
+  0.8   -2.2002mA       NA      NA
+  0.6   -1.6858mA       NA      NA
+  0.4   -1.1413mA       NA      NA
+  0.2   -570.96uA       NA      NA
+  0.0   26.480uA        NA      NA
+  -0.2  653.53uA        NA      NA
+  -0.4  1.3059mA        NA      NA
+  -0.6  1.9862mA        NA      NA
+  -0.8  2.6911mA        NA      NA
+  -1.0  3.4248mA        NA      NA
+  -1.2  4.1872mA        NA      NA
+  -1.4  4.9906mA        NA      NA
+  -1.6  5.8694mA        NA      NA
+  -1.8  10.1566mA       NA      NA
+  -2.0  37.689mA        NA      NA
+  -2.2  54.866mA        NA      NA
+  -2.4  73.593mA        NA      NA
+  -2.6  92.517mA        NA      NA
+  -2.8  100.000mA       NA      NA
+  -5.0  100.000mA       NA      NA
+|
+[Pulldown]
+|-------------------------------------------------------------
+| Note that the[Pulldown]voltage table is referenced to Gnd.
+| Also, the Semiconductor Parameter Analyzer (Force and Sense) 
+| clamps the supply current to 100mA to protect the system.
+|-------------------------------------------------------------
+| V(V)  I(typ)          I(min)  I(max)
+  -5.0  -100.000mA      NA      NA
+  -2.0  -100.000mA      NA      NA
+  -1.8  -96.792mA       NA      NA
+  -1.6  -77.496mA       NA      NA
+  -1.4  -58.123mA       NA      NA
+  -1.2  -39.617mA       NA      NA
+  -1.0  -25.534mA       NA      NA
+  -0.8  -19.236mA       NA      NA
+  -0.6  -14.264mA       NA      NA
+  -0.4  -9.4521mA       NA      NA
+  -0.2  -4.8087mA       NA      NA
+  0.0   -312.97uA       NA      NA
+  0.2   4.0001mA        NA      NA
+  0.4   8.1041mA        NA      NA
+  0.6   11.995mA        NA      NA
+  0.8   15.666mA        NA      NA
+  1.0   19.065mA        NA      NA
+  1.2   22.197mA        NA      NA
+  1.4   25.020mA        NA      NA
+  1.6   27.536mA        NA      NA
+  1.8   29.709mA        NA      NA
+  2.0   31.545mA        NA      NA
+  2.2   33.035mA        NA      NA
+  2.4   34.202mA        NA      NA
+  2.6   35.074mA        NA      NA
+  2.8   35.714mA        NA      NA
+  3.0   36.186mA        NA      NA
+  3.2   36.542mA        NA      NA
+  3.4   36.831mA        NA      NA
+  3.6   37.070mA        NA      NA
+  3.8   37.278mA        NA      NA
+  4.0   37.466mA        NA      NA
+  4.2   37.637mA        NA      NA
+  4.4   37.794mA        NA      NA
+  4.6   37.941mA        NA      NA
+  4.8   38.078mA        NA      NA
+  5.0   38.207mA        NA      NA
+  5.2   38.331mA        NA      NA
+  5.4   38.448mA        NA      NA
+  5.6   38.561mA        NA      NA
+  5.8   38.668mA        NA      NA
+  6.0   38.825mA        NA      NA
+  6.2   39.099mA        NA      NA
+  6.4   39.492mA        NA      NA
+  6.6   40.004mA        NA      NA
+  6.8   40.915mA        NA      NA
+  7.0   65.785mA        NA      NA
+  7.2   85.038mA        NA      NA
+  7.4   100.000mA       NA      NA
+  10.0  100.000mA       NA      NA
+|
+[Ramp]
+| variable       typ                min                 max
+dV/dt_r          87.66V/1uS          49.96V/1uS           144.89V/1uS
+dV/dt_f          17.94V/1uS          11.06V/1uS           28.81V/1uS
+R_load = 7Kohms
+|
+|End [Model] ROUT
+|
+|****************************************************************************
+|                      Driver Transmitter Output 
+|****************************************************************************
+|
+[Model]          TOUT  
+|Signals         T1OUT, T2OUT
+Model_type       Output
+Polarity         Inverting
+Vmeas = 3V
+C_comp                    0.96pF              0.53pF              1.60pF
+[Temperature Range]       25                  -40                 85
+[Voltage Range]           6.00V               NA                  NA 
+[Pullup Reference]        6.00V               NA                  NA 
+[Pulldown Reference]      0.00V               0.00V               0.00V
+|
+|****************************************************************************
+|
+[Pullup]
+|-------------------------------------------------------------
+| Note that the[Pullup]voltage table is referenced to Vcc
+| and is calculated using Vtable=Vcc - Vmeasured.
+|-------------------------------------------------------------
+| V(V)  I(typ)          I(min)  I(max)
+  12.0  -17.721mA       NA      NA
+  11.8  -17.669mA       NA      NA
+  11.6  -17.619mA       NA      NA
+  11.4  -17.567mA       NA      NA
+  11.2  -17.516mA       NA      NA
+  11.0  -17.463mA       NA      NA
+  10.8  -17.408mA       NA      NA
+  10.6  -17.354mA       NA      NA
+  10.4  -17.300mA       NA      NA
+  10.2  -17.242mA       NA      NA
+  10.0  -17.186mA       NA      NA
+  9.8   -17.130mA       NA      NA
+  9.6   -17.070mA       NA      NA
+  9.4   -17.010mA       NA      NA
+  9.2   -16.949mA       NA      NA
+  9.0   -16.887mA       NA      NA
+  8.8   -16.823mA       NA      NA
+  8.6   -16.758mA       NA      NA
+  8.4   -16.692mA       NA      NA
+  8.2   -16.623mA       NA      NA
+  8.0   -16.554mA       NA      NA
+  7.8   -16.481mA       NA      NA
+  7.6   -16.404mA       NA      NA
+  7.4   -16.327mA       NA      NA
+  7.2   -16.247mA       NA      NA
+  7.0   -16.161mA       NA      NA
+  6.8   -16.073mA       NA      NA
+  6.6   -15.981mA       NA      NA
+  6.4   -15.884mA       NA      NA
+  6.2   -15.776mA       NA      NA
+  6.0   -15.663mA       NA      NA
+  5.8   -15.538mA       NA      NA
+  5.6   -15.394mA       NA      NA
+  5.4   -15.217mA       NA      NA
+  5.2   -14.970mA       NA      NA
+  5.0   -14.623mA       NA      NA
+  4.8   -14.186mA       NA      NA
+  4.6   -13.682mA       NA      NA
+  4.4   -13.128mA       NA      NA
+  4.2   -12.541mA       NA      NA
+  4.0   -11.925mA       NA      NA
+  3.8   -11.290mA       NA      NA
+  3.6   -10.636mA       NA      NA
+  3.4   -9.9646mA       NA      NA
+  3.2   -9.2836mA       NA      NA
+  3.0   -8.5891mA       NA      NA
+  2.8   -7.8868mA       NA      NA
+  2.6   -7.1728mA       NA      NA
+  2.4   -6.4534mA       NA      NA
+  2.2   -5.7240mA       NA      NA
+  2.0   -4.9922mA       NA      NA
+  1.8   -4.2515mA       NA      NA
+  1.6   -3.5109mA       NA      NA
+  1.4   -2.7653mA       NA      NA
+  1.2   -2.0236mA       NA      NA
+  1.0   -1.2914mA       NA      NA
+  0.8   -587.17uA       NA      NA
+  0.6   -71.912uA       NA      NA
+  0.4   -2.2226uA       NA      NA
+  0.2   -9.0356nA       NA      NA
+  0.0   -2.42pA         NA      NA  
+  -0.2  0A              NA      NA  
+  -6.0  0A              NA      NA  
+|
+[Pulldown]
+|-------------------------------------------------------------
+| Note that the[Pulldown]voltage table is referenced to Gnd.
+| Also, the Semiconductor Parameter Analyzer (Force and Sense) 
+| clamps the supply current to 100mA to protect the system.
+|-------------------------------------------------------------
+| V(V)  I(typ)          I(min)  I(max)
+  -5.0  3.5856mA        NA      NA
+  -4.8  4.2909mA        NA      NA
+  -4.6  4.9945mA        NA      NA
+  -4.4  5.6910mA        NA      NA
+  -4.2  6.3823mA        NA      NA
+  -4.0  7.0708mA        NA      NA
+  -3.8  7.7518mA        NA      NA
+  -3.6  8.4299mA        NA      NA
+  -3.4  9.1016mA        NA      NA
+  -3.2  9.7714mA        NA      NA
+  -3.0  10.4317mA       NA      NA
+  -2.8  11.0893mA       NA      NA
+  -2.6  11.737mA        NA      NA
+  -2.4  12.381mA        NA      NA
+  -2.2  13.018mA        NA      NA
+  -2.0  13.644mA        NA      NA
+  -1.8  14.266mA        NA      NA
+  -1.6  14.881mA        NA      NA
+  -1.4  15.485mA        NA      NA
+  -1.2  16.083mA        NA      NA
+  -1.0  16.666mA        NA      NA
+  -0.8  17.246mA        NA      NA
+  -0.6  17.813mA        NA      NA
+  -0.4  18.368mA        NA      NA
+  -0.2  18.913mA        NA      NA
+  0.0   19.448mA        NA      NA
+  0.2   19.968mA        NA      NA
+  0.4   20.476mA        NA      NA
+  0.6   20.967mA        NA      NA
+  0.8   21.447mA        NA      NA
+  1.0   21.910mA        NA      NA
+  1.2   22.358mA        NA      NA
+  1.4   22.787mA        NA      NA
+  1.6   23.198mA        NA      NA
+  1.8   23.590mA        NA      NA
+  2.0   23.966mA        NA      NA
+  2.2   24.315mA        NA      NA
+  2.4   24.647mA        NA      NA
+  2.6   24.953mA        NA      NA
+  2.8   25.235mA        NA      NA
+  3.0   25.497mA        NA      NA
+  3.2   25.731mA        NA      NA
+  3.4   25.943mA        NA      NA
+  3.6   26.134mA        NA      NA
+  3.8   26.295mA        NA      NA
+  4.0   26.441mA        NA      NA
+  4.2   26.565mA        NA      NA
+  4.4   26.668mA        NA      NA
+  4.6   26.753mA        NA      NA
+  4.8   26.823mA        NA      NA
+  5.0   26.876mA        NA      NA
+  5.2   26.917mA        NA      NA
+  5.4   26.950mA        NA      NA
+  5.6   26.975mA        NA      NA
+  5.8   26.995mA        NA      NA
+  6.0   27.010mA        NA      NA
+  6.2   27.019mA        NA      NA
+  6.4   27.028mA        NA      NA
+  6.6   27.036mA        NA      NA
+  6.8   27.042mA        NA      NA
+  7.0   27.046mA        NA      NA
+  7.2   27.048mA        NA      NA
+  7.4   27.052mA        NA      NA
+  7.6   27.053mA        NA      NA
+  7.8   27.054mA        NA      NA
+  8.0   27.054mA        NA      NA
+  8.2   27.055mA        NA      NA
+  8.4   27.054mA        NA      NA
+  8.6   27.054mA        NA      NA
+  8.8   27.053mA        NA      NA
+  9.0   27.051mA        NA      NA
+  9.2   27.049mA        NA      NA
+  9.4   27.048mA        NA      NA
+  9.6   27.046mA        NA      NA
+  9.8   27.044mA        NA      NA
+  10.0  27.042mA        NA      NA
+|
+[Ramp]
+| variable       typ                 min                 max
+dV/dt_r          9.02V/1uS            6.72V/1us           13.68V/1uS  
+dV/dt_f          8.83V/1uS            5.39V/1uS           15.65V/1uS
+R_load = 7Kohms
+|
+|End [Model] TOUT
+|
+|End [Component] MAX232 
+|
+[End]
+
