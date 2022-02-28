@@ -1,4 +1,4 @@
-#----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Author: Kishan Amratia
 # Date: 02-Jan-2022
 # Module Name: pybis2spice-gui.py
@@ -189,11 +189,11 @@ def new_window(ibis_data_model):
 
 
 def print_values():
-    print(entry.get())
-    print(list_component.get(tk.ACTIVE))
-    print(list_model.get(tk.ACTIVE))
-    print(radio_var1.get())
-    print(radio_var2.get())
+    logging.info(entry.get())
+    logging.info(list_component.get(tk.ACTIVE))
+    logging.info(list_model.get(tk.ACTIVE))
+    logging.info(radio_var1.get())
+    logging.info(radio_var2.get())
 
 
 # ---------------------------------------------------------------------------

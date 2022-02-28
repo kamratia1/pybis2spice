@@ -104,8 +104,34 @@ class TestPybis2Spice(unittest.TestCase):
                                  [5.0, 0.0, np.nan, np.nan]])
 
     def test_adjust_device_data(self):
-        # TODO test_adjust_device_data
-        pass
+        device = np.asarray([[0, 10, 10, 10], [1, 10, 10, 10], [2, 10, 10, 10]])
+        clamp = np.asarray([[0, 0, 0, 0], [1, 0, 0, 0], [2, 0, 0, 0]])
+        clamp_pos = np.asarray([[0, 1, 1, 1], [1, 1, 1, 1], [2, 1, 1, 1]])
+        clamp_neg = np.asarray([[0, -1, -1, -1], [1, -1, -1, -1], [2, -1, -1, -1]])
+        result1 = pybis2spice.adjust_device_data(device, clamp)
+        result2 = pybis2spice.adjust_device_data(device, clamp_pos)
+        result3 = pybis2spice.adjust_device_data(device, clamp_neg)
+
+        device2 = np.asarray([[0, 10, 10, 10], [-1, 10, 10, 10], [-2, 10, 10, 10]])
+        clamp2 = np.asarray([[0, 0, 0, 0], [-1, 0, 0, 0], [-2, 0, 0, 0]])
+        clamp2_pos = np.asarray([[0, 1, 1, 1], [-1, 1, 1, 1], [-2, 1, 1, 1]])
+        clamp2_neg = np.asarray([[0, -1, -1, -1], [-1, -1, -1, -1], [-2, -1, -1, -1]])
+        result4 = pybis2spice.adjust_device_data(device2, clamp2)
+        result5 = pybis2spice.adjust_device_data(device2, clamp2_pos)
+        result6 = pybis2spice.adjust_device_data(device2, clamp2_neg)
+
+        # interpolate
+        device3 = np.asarray([[0, 0, 0, 0], [1, 1, 1, 1], [2, 2, 2, 2]])
+        clamp3 = np.asarray([[0, 0, 0, 0], [1.5, 1.5, 1.5, 1.5], [2, 2, 2, 2]])
+        result7 = pybis2spice.adjust_device_data(device3, clamp3)
+
+        np.testing.assert_equal(result1, np.asarray([[0, 10, 10, 10], [1, 10, 10, 10], [2, 10, 10, 10]]))
+        np.testing.assert_equal(result2, np.asarray([[0, 9, 9, 9], [1, 9, 9, 9], [2, 9, 9, 9]]))
+        np.testing.assert_equal(result3, np.asarray([[0, 11, 11, 11], [1, 11, 11, 11], [2, 11, 11, 11]]))
+        np.testing.assert_equal(result4, np.asarray([[0, 10, 10, 10], [-1, 10, 10, 10], [-2, 10, 10, 10]]))
+        np.testing.assert_equal(result5, np.asarray([[0, 9, 9, 9], [-1, 9, 9, 9], [-2, 9, 9, 9]]))
+        np.testing.assert_equal(result6, np.asarray([[0, 11, 11, 11], [-1, 11, 11, 11], [-2, 11, 11, 11]]))
+        np.testing.assert_equal(result7, np.asarray([[0, 0, 0, 0], [1, 0, 0, 0], [2, 0, 0, 0]]))
 
     def test_increasing(self):
         self.assertEqual(pybis2spice.increasing([0, 0, 0, 0]), True)

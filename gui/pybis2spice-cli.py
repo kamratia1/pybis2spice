@@ -4,6 +4,7 @@
 # Module Name: pybis2spice-cli.py
 """
 A command-line interface tool for helping users to convert IBIS models into SPICE models
+OBSOLETE - No longer planned to be developed. Kept here for reference.
 """
 # ---------------------------------------------------------------------------
 
