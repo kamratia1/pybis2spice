@@ -25,9 +25,6 @@ PyInstaller.__main__.run([
 
 shutil.copy(os.path.join('dist', 'pybis2spice-gui.exe'), os.getcwd())
 
-
-
-
 # Remove the files
 #shutil.rmtree('build')
 #os.remove('pybis2spice-gui.spec')

@@ -127,6 +127,7 @@ def check_model():
         dialog = messagebox.showinfo(title="No model Selected", message="Please select a valid IBIS file and model")
 
 
+# This is the Check Model window
 def new_window(ibis_data_model):
     data_window = tk.Toplevel(window)
     data_window.title(f"Check IBIS Model - {ibis_data_model.model_name}")
@@ -236,7 +237,7 @@ def print_values():
 window = tk.Tk()
 window.geometry(f"{_width}x{_height}")
 window.resizable(False, False)
-window.title(f" IBIS to SPICE converter - version {_gui_version}")
+window.title(f" IBIS to SPICE Converter - version {_gui_version}")
 window.iconbitmap('icon.ico')
 
 # ---------------------------------------------------------------------------
