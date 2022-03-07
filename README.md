@@ -7,16 +7,19 @@ A python tool that converts IBIS models to SPICE models
 * _SPICE model creation for open drain outputs (Under development)_
 
 ## Usage
-The gui folder contains an executable that can be run standalone. 
+The gui folder contains an executable that can be run standalone.
+![](/img/gui-window.png)
 
 ### The executable program allows the user to:
 * Browse for an ibis model file
 * Select the component and the model
-* Check the selected model (view the graphs for the I-V and Voltage-Time characteristics)
 * Create the SPICE subcircuit with some options 
+* Check the selected model (view the graphs for the I-V and Voltage-Time characteristics)
+![](/img/gui-check-model.png)
+
 
 ### Spice Subcircuit option: 
-* LTSpice: LTSpice option produces a subcircuit file with specific special syntax that only LTSpice can parse
+* LTSpice: LTSpice option produces a subcircuit file containing special syntax specific to LTSpice
 * Generic: generic option produces a subcircuit file that most Spice simulators should be able to parse. Tested with Simetrix version 8.x
 
 ### Corner Select: 

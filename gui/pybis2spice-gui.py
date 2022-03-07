@@ -17,12 +17,13 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationTool
 import time
 import logging
 import webbrowser
+import base64
+import icon
 
 _width = 740
 _height = 450
 _gui_version = version.get_version()
 logging.basicConfig(level=logging.INFO)
-
 
 # ---------------------------------------------------------------------------
 # Callback Functions
@@ -38,7 +39,8 @@ def help_message():
     help_window.resizable(False, False)
     help_window.grab_set()
     help_window.geometry(f"+{window.winfo_rootx() + 50}+{window.winfo_rooty() + 50}")
-    help_window.iconbitmap('icon.ico')
+    #help_window.iconbitmap(temp_icon_file)
+    help_window.iconphoto(False, _icon_img)
 
     message1 = f"\n\nIBIS to SPICE Converter version {_gui_version}\n\n\n" \
               "Please report any bugs and issues at the link below.\n" \
@@ -134,7 +136,7 @@ def new_window(ibis_data_model):
     data_window.minsize(700, 700)
     data_window.grab_set()
     data_window.geometry(f"+{window.winfo_rootx() + 50}+{window.winfo_rooty() + 50}")
-    data_window.iconbitmap('icon.ico')
+    data_window.iconphoto(False, _icon_img)
     # data_window.resizable(True, True)
 
     tab_parent = ttk.Notebook(data_window)
@@ -238,7 +240,11 @@ window = tk.Tk()
 window.geometry(f"{_width}x{_height}")
 window.resizable(False, False)
 window.title(f" IBIS to SPICE Converter - version {_gui_version}")
-window.iconbitmap('icon.ico')
+
+# Set up the Icon
+_icon_data = base64.b64decode(icon.get_icon())
+_icon_img = tk.PhotoImage(data=icon.get_icon())
+window.iconphoto(False, _icon_img)
 
 # ---------------------------------------------------------------------------
 # Frame 1: Browse for IBIS file
