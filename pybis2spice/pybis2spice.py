@@ -811,6 +811,7 @@ def create_output_subcircuit_file(ibis_data, output_filepath, k_param_rise, k_pa
         file.write(f'.SUBCKT {subcircuit_name} OUT params: stimulus=0 edge=0 delay=10n freq=10Meg duty=0.5\n\n')
 
         # TODO use pullup/pulldown ref and clamp references where available
+
         vcc = ibis_data.v_range[_INDEX]
 
         file.write(f'.param C_pkg = {ibis_data.c_pkg[_INDEX]}\n')

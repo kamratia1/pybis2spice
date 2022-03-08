@@ -28,6 +28,8 @@ logging.basicConfig(level=logging.INFO)
 # ---------------------------------------------------------------------------
 # Callback Functions
 # ---------------------------------------------------------------------------
+
+
 def help_callback(url):
     webbrowser.open_new(url)
 
@@ -39,7 +41,6 @@ def help_message():
     help_window.resizable(False, False)
     help_window.grab_set()
     help_window.geometry(f"+{window.winfo_rootx() + 50}+{window.winfo_rooty() + 50}")
-    #help_window.iconbitmap(temp_icon_file)
     help_window.iconphoto(False, _icon_img)
 
     message1 = f"\n\nIBIS to SPICE Converter version {_gui_version}\n\n\n" \
@@ -55,7 +56,7 @@ def help_message():
     message2 = "Help on how to use this tool can be found within the README at "
     url2 = "https://github.com/kamratia1/pybis2spice/\n\n"
     lbl2 = tk.Label(help_window, text=f"\n\n{message2}")
-    link2 = tk.Label(help_window, text=url1, fg='#0000EE')
+    link2 = tk.Label(help_window, text=url2, fg='#0000EE')
     link2.bind("<Button-1>", lambda e: help_callback(url2))
 
     lbl1.pack(side=tk.TOP)
@@ -71,6 +72,30 @@ def browse():
     logging.info(file.name)
 
 
+def save_file():
+    file_path = entry.get()
+    component_name = list_component.get(tk.ACTIVE)
+    model_name = list_model.get(tk.ACTIVE)
+
+    window.config(cursor="wait")
+
+    ibis_data = pybis2spice.DataModel(file_path, model_name, component_name)
+
+    window.update()
+    time.sleep(0.1)
+    window.config(cursor="")
+
+    if not(hasattr(ibis_data, 'model')):
+        dialog = messagebox.showinfo(title="No model Selected", message="Please select a valid IBIS file and model")
+    else:
+        # Create the subcircuit file
+        file = filedialog.asksaveasfile(parent=window,
+                                        title='Choose a file',
+                                        filetypes=[("Subcircuit Files", ".sub")],
+                                        initialfile=f"Default.sub")
+        logging.info(file.name)
+
+
 def load_components_and_models():
 
     file = filedialog.askopenfile(parent=window,
@@ -78,7 +103,9 @@ def load_components_and_models():
                                   filetypes=[("IBIS files", ".ibs"),("All files", "*")])
     ibis_filepath = file.name
     entry.delete(0, tk.END)
+    entry.config(state='normal')
     entry.insert(0, ibis_filepath)
+    entry.config(state='disabled')
 
     logging.info(f"Subcircuit Option: {radio_var1.get()}")
     logging.info(f"Component Selected: {list_component.get(tk.ACTIVE)}")
@@ -256,6 +283,7 @@ label1.pack(side=tk.LEFT)
 
 entry = tk.Entry(master=frame1, width=80)
 entry.pack(side=tk.LEFT)
+entry.config(state='disabled')
 
 btn1 = tk.Button(master=frame1, text="Browse", padx=10, command=load_components_and_models)
 btn1.pack(side=tk.LEFT)
@@ -310,7 +338,7 @@ radio5.place(x=350, y=40)
 btn3 = tk.Button(master=frame3, text="Help", command=help_message)
 btn3.place(x=10, y=80)
 
-btn4 = tk.Button(master=frame3, text="Create SPICE Subcircuit", command=print_values)
+btn4 = tk.Button(master=frame3, text="Create SPICE Subcircuit", command=save_file)
 btn4.place(x=50, y=80)
 
 # Run
