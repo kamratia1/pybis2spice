@@ -23,9 +23,9 @@ The gui folder contains an executable that can be run standalone.
 * Generic: generic option produces a subcircuit file that most Spice simulators should be able to parse. Tested with Simetrix version 8.x
 
 ### Corner Select: 
-* Weak-Slow: Combining the minimum I-V curves and slow Voltage-Time waveforms   
+* Weak-Slow: Combining the minimum (weak) I-V curves and minimum (slow) Voltage-Time waveforms   
 * Typical: Combining the typical I-V curves and typical Voltage-Time corners
-* Fast-Strong: Combining the maximum I-V curves and typical Voltage-Time corners
+* Fast-Strong: Combining the maximum (strong) I-V curves and maximum (fast) Voltage-Time corners
 
 ## Examples
 LTSpice and Simetrix examples are given to highlight the different options available. 
