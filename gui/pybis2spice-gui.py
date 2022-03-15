@@ -150,7 +150,7 @@ def check_model_callback():
     if hasattr(ibis_data, 'model'):
         check_model_window(ibis_data)
     else:
-        dialog = messagebox.showinfo(title="No model Selected", message="Please select a valid IBIS file and model")
+        messagebox.showinfo(title="No model Selected", message="Please select a valid IBIS file and model")
 
 
 # ---------------------------------------------------------------------------
@@ -185,8 +185,8 @@ def check_model_window(ibis_data_model):
     tab5 = ttk.Frame(tab_parent)
     tab6 = ttk.Frame(tab_parent)
     tab7 = ttk.Frame(tab_parent)
-    tab_parent.add(tab1, text="Summary")
 
+    tab_parent.add(tab1, text="Summary")
     if ibis_data_model.iv_pullup is not None:
         tab_parent.add(tab2, text="Pullup")
     if ibis_data_model.iv_pulldown is not None:
@@ -263,111 +263,109 @@ def check_model_window(ibis_data_model):
     canvas6.get_tk_widget().pack()
 
 
-# ---------------------------------------------------------------------------
-# Main Window Options
-# ---------------------------------------------------------------------------
-window = tk.Tk()
-window.geometry(f"{_width}x{_height}")
-window.resizable(False, False)
-window.title(f" IBIS to SPICE Converter - version {_gui_version}")
+# Run the main window
+if __name__ == '__main__':
+    # Main Window Top Level Options
+    window = tk.Tk()
+    window.geometry(f"{_width}x{_height}")
+    window.resizable(False, False)
+    window.title(f" IBIS to SPICE Converter - version {_gui_version}")
 
-# Set up the Icon
-_icon_data = base64.b64decode(icon.get_icon())
-_icon_img = tk.PhotoImage(data=icon.get_icon())
-window.iconphoto(False, _icon_img)
+    # Set up the Icon
+    _icon_data = base64.b64decode(icon.get_icon())
+    _icon_img = tk.PhotoImage(data=icon.get_icon())
+    window.iconphoto(False, _icon_img)
 
-# ---------------------------------------------------------------------------
-# Frame 1: Browse for IBIS file
-# ---------------------------------------------------------------------------
-frame1 = tk.Frame(window, height=50, width=_width)
-frame1.pack(padx=10, pady=10)
-label1 = tk.Label(master=frame1, text="IBIS File Select", padx=10)
-label1.pack(side=tk.LEFT)
+    # ---------------------------------------------------------------------------
+    # Frame 1: Browse for IBIS file
+    # ---------------------------------------------------------------------------
+    frame1 = tk.Frame(window, height=50, width=_width)
+    frame1.pack(padx=10, pady=10)
+    label1 = tk.Label(master=frame1, text="IBIS File Select", padx=10)
+    label1.pack(side=tk.LEFT)
 
-entry = tk.Entry(master=frame1, width=80)
-entry.pack(side=tk.LEFT)
-entry.config(state='disabled')
+    entry = tk.Entry(master=frame1, width=80)
+    entry.pack(side=tk.LEFT)
+    entry.config(state='disabled')
 
-btn1 = tk.Button(master=frame1, text="Browse", padx=10, command=browse_callback)
-btn1.pack(side=tk.LEFT)
+    btn1 = tk.Button(master=frame1, text="Browse", padx=10, command=browse_callback)
+    btn1.pack(side=tk.LEFT)
 
+    # ---------------------------------------------------------------------------
+    # Frame 2: IBIS Component and Model Selection
+    # ---------------------------------------------------------------------------
+    frame2 = tk.Frame(window, height=240, width=_width, relief=tk.SUNKEN, borderwidth=1)
+    frame2.pack(padx=10, pady=10)
+    label1 = tk.Label(master=frame2, text="IBIS Component Select")
+    label1.place(x=10, y=10)
 
-# ---------------------------------------------------------------------------
-# Frame 2: IBIS Component and Model Selection
-# ---------------------------------------------------------------------------
-frame2 = tk.Frame(window, height=240, width=_width, relief=tk.SUNKEN, borderwidth=1)
-frame2.pack(padx=10, pady=10)
-label1 = tk.Label(master=frame2, text="IBIS Component Select")
-label1.place(x=10, y=10)
+    label2 = tk.Label(master=frame2, text="IBIS Model Select")
+    label2.place(x=_width / 2, y=10)
 
-label2 = tk.Label(master=frame2, text="IBIS Model Select")
-label2.place(x=_width/2, y=10)
+    list_component = tk.Listbox(master=frame2, exportselection=0, width=45, height=10)
+    list_component.place(x=10, y=35)
 
-list_component = tk.Listbox(master=frame2, exportselection=0, width=45, height=10)
-list_component.place(x=10, y=35)
+    list_model = tk.Listbox(master=frame2, exportselection=0, width=45, height=10)
+    list_model.place(x=_width / 2, y=35)
 
-list_model = tk.Listbox(master=frame2, exportselection=0, width=45, height=10)
-list_model.place(x=_width/2, y=35)
+    btn2 = tk.Button(master=frame2, text="Check Model", command=check_model_callback)
+    btn2.place(x=10, y=205)
+    ToolTip(btn2, msg="view the I-V and Voltage-Time characteristic graphs of the model", delay=0.2)
 
-btn2 = tk.Button(master=frame2, text="Check Model", command=check_model_callback)
-btn2.place(x=10, y=205)
-ToolTip(btn2, msg="view the I-V and Voltage-Time characteristic graphs of the model", delay=0.2)
+    # ---------------------------------------------------------------------------
+    # Frame 3: SPICE subcircuit options
+    # ---------------------------------------------------------------------------
+    frame3 = tk.Frame(window, height=150, width=_width, relief=tk.SUNKEN, borderwidth=1)
+    frame3.pack(padx=10, pady=10)
+    label3 = tk.Label(master=frame3, text="Spice Subcircuit Options")
+    label3.place(x=10, y=10)
 
-# ---------------------------------------------------------------------------
-# Frame 3: SPICE subcircuit options
-# ---------------------------------------------------------------------------
-frame3 = tk.Frame(window, height=150, width=_width, relief=tk.SUNKEN, borderwidth=1)
-frame3.pack(padx=10, pady=10)
-label3 = tk.Label(master=frame3, text="Spice Subcircuit Options")
-label3.place(x=10, y=10)
+    # Radio Buttons for LTSpice vs Generic
+    radio_var1 = tk.StringVar()
+    radio1 = tk.Radiobutton(master=frame3, text="LTSpice", variable=radio_var1, value="LTSpice")
+    radio2 = tk.Radiobutton(master=frame3, text="Generic", variable=radio_var1, value="Generic")
+    radio2.select()
+    radio1.place(x=170, y=10)
+    radio2.place(x=250, y=10)
+    ToolTip(radio1, msg="produces a subcircuit file containing special syntax specific to LTSpice", delay=0.2)
+    ToolTip(radio2, msg="produces a subcircuit file that most Spice simulators should be able to parse", delay=0.2)
 
-# Radio Buttons for LTSpice vs Generic
-radio_var1 = tk.StringVar()
-radio1 = tk.Radiobutton(master=frame3, text="LTSpice", variable=radio_var1, value="LTSpice")
-radio2 = tk.Radiobutton(master=frame3, text="Generic", variable=radio_var1, value="Generic")
-radio2.select()
-radio1.place(x=170, y=10)
-radio2.place(x=250, y=10)
-ToolTip(radio1, msg="produces a subcircuit file containing special syntax specific to LTSpice", delay=0.2)
-ToolTip(radio2, msg="produces a subcircuit file that most Spice simulators should be able to parse", delay=0.2)
+    # Radio Buttons for Corner Select
+    label4 = tk.Label(master=frame3, text="Corner Select")
+    label4.place(x=10, y=40)
+    radio_var2 = tk.IntVar()
+    radio3 = tk.Radiobutton(master=frame3, text="Weak-Slow", variable=radio_var2, value=0)
+    radio4 = tk.Radiobutton(master=frame3, text="Typical", variable=radio_var2, value=1)
+    radio5 = tk.Radiobutton(master=frame3, text="Fast-Strong", variable=radio_var2, value=2)
+    radio4.select()
+    radio3.place(x=170, y=40)
+    radio4.place(x=270, y=40)
+    radio5.place(x=350, y=40)
 
-# Radio Buttons for Corner Select
-label4 = tk.Label(master=frame3, text="Corner Select")
-label4.place(x=10, y=40)
-radio_var2 = tk.IntVar()
-radio3 = tk.Radiobutton(master=frame3, text="Weak-Slow", variable=radio_var2, value=0)
-radio4 = tk.Radiobutton(master=frame3, text="Typical", variable=radio_var2, value=1)
-radio5 = tk.Radiobutton(master=frame3, text="Fast-Strong", variable=radio_var2, value=2)
-radio4.select()
-radio3.place(x=170, y=40)
-radio4.place(x=270, y=40)
-radio5.place(x=350, y=40)
+    ToolTip(radio3, msg="combines the minimum (weak) I-V curves and minimum (slow) V-T waveforms", delay=0.2)
+    ToolTip(radio4, msg="combines the typical I-V curves and typical V-T waveforms", delay=0.2)
+    ToolTip(radio5, msg="combines the maximum (strong) I-V curves and maximum (fast) V-T waveforms", delay=0.2)
 
-ToolTip(radio3, msg="combines the minimum (weak) I-V curves and minimum (slow) V-T waveforms", delay=0.2)
-ToolTip(radio4, msg="combines the typical I-V curves and typical V-T waveforms", delay=0.2)
-ToolTip(radio5, msg="combines the maximum (strong) I-V curves and maximum (fast) V-T waveforms", delay=0.2)
+    # Radio Buttons for Selecting Input or Output Model Type
+    label5 = tk.Label(master=frame3, text="I/O Select")
+    label5.place(x=10, y=70)
+    radio_var3 = tk.StringVar()
+    radio6 = tk.Radiobutton(master=frame3, text="Input", variable=radio_var3, value="Input")
+    radio7 = tk.Radiobutton(master=frame3, text="Output", variable=radio_var3, value="Output")
+    radio6.select()
+    radio6.place(x=170, y=70)
+    radio7.place(x=250, y=70)
 
-# Radio Buttons for Selecting Input or Output Model Type
-label5 = tk.Label(master=frame3, text="I/O Select")
-label5.place(x=10, y=70)
-radio_var3 = tk.StringVar()
-radio6 = tk.Radiobutton(master=frame3, text="Input", variable=radio_var3, value="Input")
-radio7 = tk.Radiobutton(master=frame3, text="Output", variable=radio_var3, value="Output")
-radio6.select()
-radio6.place(x=170, y=70)
-radio7.place(x=250, y=70)
+    label5_tooltip = "Subcircuit file can only be created for an input OR an output pin independently. " \
+                     "This option is only valid for IBIS models with I/O pin types"
+    ToolTip(label5, msg=label5_tooltip, delay=0.2)
+    ToolTip(radio6, msg="subcircuit will be created for the input pin - no pullup/pulldown transistors", delay=0.2)
+    ToolTip(radio7, msg="subcircuit will be created for the output pin - with pullup/pulldown transistors", delay=0.2)
 
-label5_tooltip = "Subcircuit file can only be created for an input or output pin independently. " \
-                 "Only valid for IBIS models with I/O pin types"
-ToolTip(label5, msg=label5_tooltip, delay=0.2)
-ToolTip(radio6, msg="subcircuit will be created for the input pin - no pullup/pulldown transistors", delay=0.2)
-ToolTip(radio7, msg="subcircuit will be created for the output pin - with pullup/pulldown transistors", delay=0.2)
+    btn3 = tk.Button(master=frame3, text="Help", command=help_message_callback)
+    btn3.place(x=10, y=110)
 
-btn3 = tk.Button(master=frame3, text="Help", command=help_message_callback)
-btn3.place(x=10, y=110)
+    btn4 = tk.Button(master=frame3, text="Create SPICE Subcircuit", command=save_file_callback)
+    btn4.place(x=50, y=110)
 
-btn4 = tk.Button(master=frame3, text="Create SPICE Subcircuit", command=save_file_callback)
-btn4.place(x=50, y=110)
-
-# Run
-window.mainloop()
+    window.mainloop()
