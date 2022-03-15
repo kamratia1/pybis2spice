@@ -28,16 +28,16 @@ _gui_version = version.get_version()
 _date = version.get_date()
 logging.basicConfig(level=logging.INFO)
 
+
 # ---------------------------------------------------------------------------
-# Callback Functions
+# Callback Functions from Buttons or other actions
 # ---------------------------------------------------------------------------
 
-
-def help_callback(url):
+def help_url_callback(url):
     webbrowser.open_new(url)
 
 
-def help_message():
+def help_message_callback():
     help_window = tk.Toplevel(window)
     help_window.title(f" Help")
     help_window.minsize(550, 250)
@@ -56,7 +56,7 @@ def help_message():
     url1 = "https://github.com/kamratia1/pybis2spice/issues/"
     lbl1 = tk.Label(help_window, text=f"{message1}")
     link1 = tk.Label(help_window, text=url1, fg='#0000EE')
-    link1.bind("<Button-1>", lambda e: help_callback(url1))
+    link1.bind("<Button-1>", lambda e: help_url_callback(url1))
 
     message2 = "Help on how to use this tool can be found within the README at "
     url2 = "https://github.com/kamratia1/pybis2spice/\n\n"
@@ -70,14 +70,7 @@ def help_message():
     link2.pack(side=tk.TOP)
 
 
-def browse():
-    file = filedialog.askopenfile(parent=window,
-                                  title='Choose a file',
-                                  filetypes=[("IBIS files", ".ibs"), ("All files", "*")])
-    logging.info(file.name)
-
-
-def save_file():
+def save_file_callback():
     file_path = entry.get()
     component_name = list_component.get(tk.ACTIVE)
     model_name = list_model.get(tk.ACTIVE)
@@ -94,14 +87,16 @@ def save_file():
         dialog = messagebox.showinfo(title="No model Selected", message="Please select a valid IBIS file and model")
     else:
         # TODO Create the subcircuit file
+        print_values()
         file = filedialog.asksaveasfile(parent=window,
                                         title='Choose a file',
                                         filetypes=[("Subcircuit Files", ".sub")],
                                         initialfile=f"Default.sub")
-        logging.info(file.name)
+        if file:
+            logging.info(file.name)
 
 
-def load_components_and_models():
+def browse_callback():
 
     file = filedialog.askopenfile(parent=window,
                                   title='Choose a file',
@@ -112,10 +107,6 @@ def load_components_and_models():
     entry.delete(0, tk.END)
     entry.insert(0, ibis_filepath)
     entry.config(state='disabled')
-
-    logging.info(f"Subcircuit Option: {radio_var1.get()}")
-    logging.info(f"Component Selected: {list_component.get(tk.ACTIVE)}")
-    logging.info(f"Model Selected: {list_model.get(tk.ACTIVE)}")
 
     window.config(cursor="")
     time.sleep(0.1)
@@ -143,7 +134,7 @@ def load_components_and_models():
     window.config(cursor="")
 
 
-def check_model():
+def check_model_callback():
     file_path = entry.get()
     component_name = list_component.get(tk.ACTIVE)
     model_name = list_model.get(tk.ACTIVE)
@@ -157,13 +148,27 @@ def check_model():
     window.config(cursor="")
 
     if hasattr(ibis_data, 'model'):
-        new_window(ibis_data)
+        check_model_window(ibis_data)
     else:
         dialog = messagebox.showinfo(title="No model Selected", message="Please select a valid IBIS file and model")
 
 
-# This is the Check Model window
-def new_window(ibis_data_model):
+# ---------------------------------------------------------------------------
+# Helper/Debug Functions
+# ---------------------------------------------------------------------------
+def print_values():
+    logging.info(f"File Name: {entry.get()}")
+    logging.info(f"Component Selected: {list_component.get(tk.ACTIVE)}")
+    logging.info(f"Model Selected: {list_model.get(tk.ACTIVE)}")
+    logging.info(f"Subcircuit Option: {radio_var1.get()}")
+    logging.info(f"Corner Select: {radio_var2.get()}")
+    logging.info(f"I/O Select: {radio_var3.get()}")
+
+
+# ---------------------------------------------------------------------------
+# Check Model Window
+# ---------------------------------------------------------------------------
+def check_model_window(ibis_data_model):
     data_window = tk.Toplevel(window)
     data_window.title(f"Check IBIS Model - {ibis_data_model.model_name}")
     data_window.minsize(700, 700)
@@ -258,16 +263,8 @@ def new_window(ibis_data_model):
     canvas6.get_tk_widget().pack()
 
 
-def print_values():
-    logging.info(entry.get())
-    logging.info(list_component.get(tk.ACTIVE))
-    logging.info(list_model.get(tk.ACTIVE))
-    logging.info(radio_var1.get())
-    logging.info(radio_var2.get())
-
-
 # ---------------------------------------------------------------------------
-# Window Options
+# Main Window Options
 # ---------------------------------------------------------------------------
 window = tk.Tk()
 window.geometry(f"{_width}x{_height}")
@@ -291,7 +288,7 @@ entry = tk.Entry(master=frame1, width=80)
 entry.pack(side=tk.LEFT)
 entry.config(state='disabled')
 
-btn1 = tk.Button(master=frame1, text="Browse", padx=10, command=load_components_and_models)
+btn1 = tk.Button(master=frame1, text="Browse", padx=10, command=browse_callback)
 btn1.pack(side=tk.LEFT)
 
 
@@ -312,7 +309,7 @@ list_component.place(x=10, y=35)
 list_model = tk.Listbox(master=frame2, exportselection=0, width=45, height=10)
 list_model.place(x=_width/2, y=35)
 
-btn2 = tk.Button(master=frame2, text="Check Model", command=check_model)
+btn2 = tk.Button(master=frame2, text="Check Model", command=check_model_callback)
 btn2.place(x=10, y=205)
 ToolTip(btn2, msg="view the I-V and Voltage-Time characteristic graphs of the model", delay=0.2)
 
@@ -366,10 +363,10 @@ ToolTip(label5, msg=label5_tooltip, delay=0.2)
 ToolTip(radio6, msg="subcircuit will be created for the input pin - no pullup/pulldown transistors", delay=0.2)
 ToolTip(radio7, msg="subcircuit will be created for the output pin - with pullup/pulldown transistors", delay=0.2)
 
-btn3 = tk.Button(master=frame3, text="Help", command=help_message)
+btn3 = tk.Button(master=frame3, text="Help", command=help_message_callback)
 btn3.place(x=10, y=110)
 
-btn4 = tk.Button(master=frame3, text="Create SPICE Subcircuit", command=save_file)
+btn4 = tk.Button(master=frame3, text="Create SPICE Subcircuit", command=save_file_callback)
 btn4.place(x=50, y=110)
 
 # Run
