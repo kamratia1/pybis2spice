@@ -88,7 +88,7 @@ def save_file():
     if not(hasattr(ibis_data, 'model')):
         dialog = messagebox.showinfo(title="No model Selected", message="Please select a valid IBIS file and model")
     else:
-        # Create the subcircuit file
+        # TODO Create the subcircuit file
         file = filedialog.asksaveasfile(parent=window,
                                         title='Choose a file',
                                         filetypes=[("Subcircuit Files", ".sub")],
