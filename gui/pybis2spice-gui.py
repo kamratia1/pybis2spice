@@ -8,6 +8,7 @@ A tkinter GUI for helping users to convert IBIS models into SPICE models
 # ---------------------------------------------------------------------------
 
 from pybis2spice import pybis2spice
+from pybis2spice import plot
 from pybis2spice import version
 import tkinter as tk
 from tkinter import ttk
@@ -100,10 +101,11 @@ def load_components_and_models():
 
     file = filedialog.askopenfile(parent=window,
                                   title='Choose a file',
-                                  filetypes=[("IBIS files", ".ibs"),("All files", "*")])
+                                  filetypes=[("IBIS files", ".ibs"), ("All files", "*")])
     ibis_filepath = file.name
-    entry.delete(0, tk.END)
+
     entry.config(state='normal')
+    entry.delete(0, tk.END)
     entry.insert(0, ibis_filepath)
     entry.config(state='disabled')
 
@@ -201,13 +203,13 @@ def new_window(ibis_data_model):
 
     tab_parent.pack(expand=1, fill=tk.BOTH)
 
-    fig1 = pybis2spice.plot_iv_data_single(ibis_data_model.iv_pullup, "Pullup device IV data")
-    fig2 = pybis2spice.plot_iv_data_single(ibis_data_model.iv_pulldown, "Pulldown device IV data")
-    fig3 = pybis2spice.plot_iv_data_single(ibis_data_model.iv_pwr_clamp, "Power clamp IV data")
-    fig4 = pybis2spice.plot_iv_data_single(ibis_data_model.iv_gnd_clamp, "Ground clamp IV data")
+    fig1 = plot.plot_iv_data_single(ibis_data_model.iv_pullup, "Pullup device IV data")
+    fig2 = plot.plot_iv_data_single(ibis_data_model.iv_pulldown, "Pulldown device IV data")
+    fig3 = plot.plot_iv_data_single(ibis_data_model.iv_pwr_clamp, "Power clamp IV data")
+    fig4 = plot.plot_iv_data_single(ibis_data_model.iv_gnd_clamp, "Ground clamp IV data")
 
-    fig5 = pybis2spice.plot_vt_rising_waveform_data(ibis_data_model)
-    fig6 = pybis2spice.plot_vt_falling_waveform_data(ibis_data_model)
+    fig5 = plot.plot_vt_rising_waveform_data(ibis_data_model)
+    fig6 = plot.plot_vt_falling_waveform_data(ibis_data_model)
 
     canvas1 = FigureCanvasTkAgg(fig1, master=tab2)
     canvas2 = FigureCanvasTkAgg(fig2, master=tab3)
