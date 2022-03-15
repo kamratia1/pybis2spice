@@ -14,6 +14,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
+from tktooltip import ToolTip
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 import time
 import logging
@@ -313,6 +314,7 @@ list_model.place(x=_width/2, y=35)
 
 btn2 = tk.Button(master=frame2, text="Check Model", command=check_model)
 btn2.place(x=10, y=205)
+ToolTip(btn2, msg="view the I-V and Voltage-Time characteristic graphs of the model", delay=0.2)
 
 # ---------------------------------------------------------------------------
 # Frame 3: SPICE subcircuit options
@@ -325,9 +327,11 @@ label3.place(x=10, y=10)
 radio_var1 = tk.StringVar()
 radio1 = tk.Radiobutton(master=frame3, text="LTSpice", variable=radio_var1, value="LTSpice")
 radio2 = tk.Radiobutton(master=frame3, text="Generic", variable=radio_var1, value="Generic")
-radio1.select()
+radio2.select()
 radio1.place(x=170, y=10)
 radio2.place(x=250, y=10)
+ToolTip(radio1, msg="produces a subcircuit file containing special syntax specific to LTSpice", delay=0.2)
+ToolTip(radio2, msg="produces a subcircuit file that most Spice simulators should be able to parse", delay=0.2)
 
 label4 = tk.Label(master=frame3, text="Corner Select")
 label4.place(x=10, y=40)
@@ -339,6 +343,11 @@ radio4.select()
 radio3.place(x=170, y=40)
 radio4.place(x=270, y=40)
 radio5.place(x=350, y=40)
+
+ToolTip(radio3, msg="combines the minimum (weak) I-V curves and minimum (slow) Voltage-Time waveforms", delay=0.2)
+ToolTip(radio4, msg="combines the typical I-V curves and typical Voltage-Time corners", delay=0.2)
+ToolTip(radio5, msg="combines the maximum (strong) I-V curves and maximum (fast) Voltage-Time corners", delay=0.2)
+
 
 btn3 = tk.Button(master=frame3, text="Help", command=help_message)
 btn3.place(x=10, y=80)
