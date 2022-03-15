@@ -24,6 +24,7 @@ import icon
 _width = 740
 _height = 450
 _gui_version = version.get_version()
+_date = version.get_date()
 logging.basicConfig(level=logging.INFO)
 
 # ---------------------------------------------------------------------------
@@ -44,10 +45,12 @@ def help_message():
     help_window.geometry(f"+{window.winfo_rootx() + 50}+{window.winfo_rooty() + 50}")
     help_window.iconphoto(False, _icon_img)
 
-    message1 = f"\n\nIBIS to SPICE Converter version {_gui_version}\n\n\n" \
-              "Please report any bugs and issues at the link below.\n" \
-              "Detailed information on how the issue can be reproduced should be provided including \n" \
-              "any IBIS files used and version number of this program."
+    message1 = f"\n\nIBIS to SPICE Converter\n" \
+               f"Version: {_gui_version}\n" \
+               f"Release Date: {_date}\n\n\n" \
+               f"Please report any bugs and issues at the link below.\n" \
+               f"Detailed information on how the issue can be reproduced should be provided including \n" \
+               f"any IBIS files used and version number of this program."
 
     url1 = "https://github.com/kamratia1/pybis2spice/issues/"
     lbl1 = tk.Label(help_window, text=f"{message1}")
