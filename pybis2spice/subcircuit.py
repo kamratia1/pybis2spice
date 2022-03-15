@@ -17,13 +17,32 @@ import numpy as np
 # Functions to assist with subcircuit creation
 # ---------------------------------------------------------------------------
 
+def create_subcircuit_file():
+    """
+    Pseudo Code:
+    * Checks the model type
+    * And then calls the relevant function i.e. LTSpice or Generic
+    * If it in an input model, then that should be straightforward.
+    * Need to decide which model types we can support - I think this should be done at the GUI level
+    * This function actually creates the file
+    """
+
+
+def create_subcircuit_str_generic():
+    pass
+
+
+def create_subcircuit_str_ltspice():
+    pass
+
+
 def convert_iv_table_to_str(voltage, current):
     """
     Creates the IV table of values for the current sources modelling the devices and clamps
 
         Parameters:
-            voltage - numpy time array for k_r waveform
-            current - numpy time array for k_f waveform
+            voltage - numpy voltage array
+            current - corresponding numpy current array
 
         Returns:
             str_val: the string that goes into subcircuit table
@@ -36,7 +55,8 @@ def convert_iv_table_to_str(voltage, current):
 
 def create_edge_waveform_pwl(time, k_param):
     """
-    Creates the PWM value string for the oscillation waveform
+    Creates the PWL value string for the oscillation waveform
+    Only valid for LTSpice subcircuit
 
         Parameters:
             time - numpy time array for k parameter waveform
@@ -89,7 +109,7 @@ def create_osc_waveform_pwl(t_r, k_r, t_f, k_f):
 
 def determine_crossover_offsets(k_param):
     """
-    returns the approx. crossover offsets between the k_param waveforms
+    returns the approximate crossover point between the rising and falling k_param waveforms
         offset_neg: Time offset between beginning of k_param to crossover point
         offset_neg: Time offset between crossover point to end of k_param
     """
@@ -105,6 +125,7 @@ def determine_crossover_offsets(k_param):
     return offset_neg, offset_pos
 
 
+# This is an OLD function - to be removed
 def create_output_subcircuit_file(ibis_data, output_filepath, k_param_rise, k_param_fall):
     _TYP = 0
     _MIN = 1
