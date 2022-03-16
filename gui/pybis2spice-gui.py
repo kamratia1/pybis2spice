@@ -62,7 +62,7 @@ def help_message_callback():
     url2 = "https://github.com/kamratia1/pybis2spice/\n\n"
     lbl2 = tk.Label(help_window, text=f"\n\n{message2}")
     link2 = tk.Label(help_window, text=url2, fg='#0000EE')
-    link2.bind("<Button-1>", lambda e: help_callback(url2))
+    link2.bind("<Button-1>", lambda e: help_url_callback(url2))
 
     lbl1.pack(side=tk.TOP)
     link1.pack(side=tk.TOP)
@@ -265,13 +265,14 @@ def check_model_window(ibis_data_model):
 
 # Run the main window
 if __name__ == '__main__':
-    # Main Window Top Level Options
+    # Main Window Top Level Config
     window = tk.Tk()
     window.geometry(f"{_width}x{_height}")
     window.resizable(False, False)
     window.title(f" IBIS to SPICE Converter - version {_gui_version}")
 
     # Set up the Icon
+    # Using a base 64 image within a python file so that the exe build does not depend on an external icon file
     _icon_data = base64.b64decode(icon.get_icon())
     _icon_img = tk.PhotoImage(data=icon.get_icon())
     window.iconphoto(False, _icon_img)
