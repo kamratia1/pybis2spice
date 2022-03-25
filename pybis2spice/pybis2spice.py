@@ -413,7 +413,7 @@ def solve_k_params_output(ibis_data, corner=1, waveform_type="Rising"):
     return k_param
 
 
-# TODO add function to solve k_param for open-drain type models
+# TODO add function to solve k_param for open-drain type models - In Future Release
 
 def differentiate(y, x):
     """
