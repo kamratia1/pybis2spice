@@ -38,35 +38,35 @@ def help_url_callback(url):
 
 
 def help_message_callback():
-    help_window = tk.Toplevel(window)
+    help_window = tk.Toplevel(main_window)
     help_window.title(f" Help")
     help_window.minsize(550, 250)
     help_window.resizable(False, False)
     help_window.grab_set()
-    help_window.geometry(f"+{window.winfo_rootx() + 50}+{window.winfo_rooty() + 50}")
+    help_window.geometry(f"+{main_window.winfo_rootx() + 50}+{main_window.winfo_rooty() + 50}")
     help_window.iconphoto(False, _icon_img)
 
     message1 = f"\n\nIBIS to SPICE Converter\n" \
-               f"Version: {_gui_version}\n" \
-               f"Release Date: {_date}\n\n\n" \
-               f"Please report any bugs and issues at the link below.\n" \
-               f"Detailed information on how the issue can be reproduced should be provided including \n" \
-               f"any IBIS files used and version number of this program."
+                   f"Version: {_gui_version}\n" \
+                   f"Release Date: {_date}\n\n\n" \
+                   f"Please report any bugs and issues at the link below.\n" \
+                   f"Detailed information on how the issue can be reproduced should be provided including \n" \
+                   f"any IBIS files used and version number of this program."
 
     url1 = "https://github.com/kamratia1/pybis2spice/issues/"
-    lbl1 = tk.Label(help_window, text=f"{message1}")
+    lbl_message1 = tk.Label(help_window, text=f"{message1}")
     link1 = tk.Label(help_window, text=url1, fg='#0000EE')
     link1.bind("<Button-1>", lambda e: help_url_callback(url1))
 
     message2 = "Help on how to use this tool can be found within the README at "
     url2 = "https://github.com/kamratia1/pybis2spice/\n\n"
-    lbl2 = tk.Label(help_window, text=f"\n\n{message2}")
+    lbl_message2 = tk.Label(help_window, text=f"\n\n{message2}")
     link2 = tk.Label(help_window, text=url2, fg='#0000EE')
     link2.bind("<Button-1>", lambda e: help_url_callback(url2))
 
-    lbl1.pack(side=tk.TOP)
+    lbl_message1.pack(side=tk.TOP)
     link1.pack(side=tk.TOP)
-    lbl2.pack(side=tk.TOP)
+    lbl_message2.pack(side=tk.TOP)
     link2.pack(side=tk.TOP)
 
 
@@ -75,20 +75,20 @@ def save_file_callback():
     component_name = list_component.get(tk.ACTIVE)
     model_name = list_model.get(tk.ACTIVE)
 
-    window.config(cursor="wait")
+    main_window.config(cursor="wait")
 
     ibis_data = pybis2spice.DataModel(file_path, model_name, component_name)
 
-    window.update()
+    main_window.update()
     time.sleep(0.1)
-    window.config(cursor="")
+    main_window.config(cursor="")
 
     if not(hasattr(ibis_data, 'model')):
         dialog = messagebox.showinfo(title="No model Selected", message="Please select a valid IBIS file and model")
     else:
         # TODO Create the subcircuit file
         print_values()
-        file = filedialog.asksaveasfile(parent=window,
+        file = filedialog.asksaveasfile(parent=main_window,
                                         title='Choose a file',
                                         filetypes=[("Subcircuit Files", ".sub")],
                                         initialfile=f"Default.sub")
@@ -98,7 +98,7 @@ def save_file_callback():
 
 def browse_callback():
 
-    file = filedialog.askopenfile(parent=window,
+    file = filedialog.askopenfile(parent=main_window,
                                   title='Choose a file',
                                   filetypes=[("IBIS files", ".ibs"), ("All files", "*")])
     ibis_filepath = file.name
@@ -108,7 +108,7 @@ def browse_callback():
     entry.insert(0, ibis_filepath)
     entry.config(state='disabled')
 
-    window.config(cursor="")
+    main_window.config(cursor="")
     time.sleep(0.1)
 
     list_component.delete(0, tk.END)
@@ -130,8 +130,8 @@ def browse_callback():
     list_component.event_generate("<<ListboxSelect>>")
     list_model.event_generate("<<ListboxSelect>>")
 
-    window.update()
-    window.config(cursor="")
+    main_window.update()
+    main_window.config(cursor="")
 
 
 def check_model_callback():
@@ -139,13 +139,13 @@ def check_model_callback():
     component_name = list_component.get(tk.ACTIVE)
     model_name = list_model.get(tk.ACTIVE)
 
-    window.config(cursor="wait")
+    main_window.config(cursor="wait")
 
     ibis_data = pybis2spice.DataModel(file_path, model_name, component_name)
 
-    window.update()
+    main_window.update()
     time.sleep(0.1)
-    window.config(cursor="")
+    main_window.config(cursor="")
 
     if hasattr(ibis_data, 'model'):
         check_model_window(ibis_data)
@@ -169,11 +169,11 @@ def print_values():
 # Check Model Window
 # ---------------------------------------------------------------------------
 def check_model_window(ibis_data_model):
-    data_window = tk.Toplevel(window)
+    data_window = tk.Toplevel(main_window)
     data_window.title(f"Check IBIS Model - {ibis_data_model.model_name}")
     data_window.minsize(700, 700)
     data_window.grab_set()
-    data_window.geometry(f"+{window.winfo_rootx() + 50}+{window.winfo_rooty() + 50}")
+    data_window.geometry(f"+{main_window.winfo_rootx() + 50}+{main_window.winfo_rooty() + 50}")
     data_window.iconphoto(False, _icon_img)
     # data_window.resizable(True, True)
 
@@ -263,24 +263,24 @@ def check_model_window(ibis_data_model):
     canvas6.get_tk_widget().pack()
 
 
-# Run the main window
+# Run the main main_window
 if __name__ == '__main__':
     # Main Window Top Level Config
-    window = tk.Tk()
-    window.geometry(f"{_width}x{_height}")
-    window.resizable(False, False)
-    window.title(f" IBIS to SPICE Converter - version {_gui_version}")
+    main_window = tk.Tk()
+    main_window.geometry(f"{_width}x{_height}")
+    main_window.resizable(False, False)
+    main_window.title(f" IBIS to SPICE Converter - version {_gui_version}")
 
     # Set up the Icon
     # Using a base 64 image within a python file so that the exe build does not depend on an external icon file
     _icon_data = base64.b64decode(icon.get_icon())
     _icon_img = tk.PhotoImage(data=icon.get_icon())
-    window.iconphoto(False, _icon_img)
+    main_window.iconphoto(False, _icon_img)
 
     # ---------------------------------------------------------------------------
     # Frame 1: Browse for IBIS file
     # ---------------------------------------------------------------------------
-    frame1 = tk.Frame(window, height=50, width=_width)
+    frame1 = tk.Frame(main_window, height=50, width=_width)
     frame1.pack(padx=10, pady=10)
     label1 = tk.Label(master=frame1, text="IBIS File Select", padx=10)
     label1.pack(side=tk.LEFT)
@@ -295,7 +295,7 @@ if __name__ == '__main__':
     # ---------------------------------------------------------------------------
     # Frame 2: IBIS Component and Model Selection
     # ---------------------------------------------------------------------------
-    frame2 = tk.Frame(window, height=240, width=_width, relief=tk.SUNKEN, borderwidth=1)
+    frame2 = tk.Frame(main_window, height=240, width=_width, relief=tk.SUNKEN, borderwidth=1)
     frame2.pack(padx=10, pady=10)
     label1 = tk.Label(master=frame2, text="IBIS Component Select")
     label1.place(x=10, y=10)
@@ -316,7 +316,7 @@ if __name__ == '__main__':
     # ---------------------------------------------------------------------------
     # Frame 3: SPICE subcircuit options
     # ---------------------------------------------------------------------------
-    frame3 = tk.Frame(window, height=150, width=_width, relief=tk.SUNKEN, borderwidth=1)
+    frame3 = tk.Frame(main_window, height=150, width=_width, relief=tk.SUNKEN, borderwidth=1)
     frame3.pack(padx=10, pady=10)
     label3 = tk.Label(master=frame3, text="Spice Subcircuit Options")
     label3.place(x=10, y=10)
@@ -369,4 +369,4 @@ if __name__ == '__main__':
     btn4 = tk.Button(master=frame3, text="Create SPICE Subcircuit", command=save_file_callback)
     btn4.place(x=50, y=110)
 
-    window.mainloop()
+    main_window.mainloop()
