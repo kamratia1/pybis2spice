@@ -10,6 +10,10 @@ A build script to create executable versions of the cli and gui
 import PyInstaller.__main__
 import shutil
 import os
+from pybis2spice import version
+
+# Create the version txt file
+version.create_version_txt_file()
 
 # MAKE SURE THE WORKING DIRECTORY IS CLOSED BEFORE RUNNING THESE SCRIPTS
 

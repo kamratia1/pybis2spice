@@ -10,6 +10,7 @@ A tkinter GUI for helping users to convert IBIS models into SPICE models
 from pybis2spice import pybis2spice
 from pybis2spice import plot
 from pybis2spice import version
+from pybis2spice import subcircuit
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
@@ -19,6 +20,7 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationTool
 import time
 import logging
 import webbrowser
+import urllib.request
 import base64
 import icon
 
@@ -28,6 +30,22 @@ _gui_version = version.get_version()
 _date = version.get_date()
 logging.basicConfig(level=logging.INFO)
 
+
+# ---------------------------------------------------------------------------
+# Version Check Functions
+# ---------------------------------------------------------------------------
+def check_latest_version():
+    latest_version = _gui_version
+
+    # TODO - Change the URL to not have the token string after making it public
+    url = "https://raw.githubusercontent.com/kamratia1/pybis2spice/main/pybis2spice/version.py?token=GHSAT0AAAAAABR6PFYEY2IS2ETHZNUWXNGIYR63TZA"
+    try:
+        version_source = urllib.request.urlopen(url)
+        latest_version = version_source.read()
+    except:
+        pass
+
+    return latest_version
 
 # ---------------------------------------------------------------------------
 # Callback Functions from Buttons or other actions
@@ -70,33 +88,57 @@ def help_message_callback():
     link2.pack(side=tk.TOP)
 
 
-def save_file_callback():
-    file_path = entry.get()
+def create_subcircuit_file_callback():
+    ibis_file_path = entry.get()
     component_name = list_component.get(tk.ACTIVE)
     model_name = list_model.get(tk.ACTIVE)
+    subcircuit_type = radio_var1.get()  # LTSpice or Generic
+    corner = radio_var2.get()
+    io_type = radio_var3.get()
 
     main_window.config(cursor="wait")
 
-    ibis_data = pybis2spice.DataModel(file_path, model_name, component_name)
+    ibis_data = pybis2spice.DataModel(ibis_file_path, model_name, component_name)
 
     main_window.update()
     time.sleep(0.1)
     main_window.config(cursor="")
 
     if not(hasattr(ibis_data, 'model')):
-        dialog = messagebox.showinfo(title="No model Selected", message="Please select a valid IBIS file and model")
+        messagebox.showinfo(title="No model Selected", message="Please select a valid IBIS file and model")
     else:
-        # TODO Create the subcircuit file
-        print_values()
+        logging.info(f"IBIS File: {ibis_file_path}")
+        logging.info(f"Component Selected: {component_name}")
+        logging.info(f"Model Selected: {model_name}")
+        logging.info(f"Subcircuit Type: {subcircuit_type}")
+        logging.info(f"Corner: {corner}")
+        logging.info(f"I/O Select: {io_type}")
+
+        filename = f'{ibis_data.model_name}-{corner}-{io_type}.sub'
+
         file = filedialog.asksaveasfile(parent=main_window,
                                         title='Choose a file',
                                         filetypes=[("Subcircuit Files", ".sub")],
-                                        initialfile=f"Default.sub")
+                                        initialfile=f"{filename}")
         if file:
             logging.info(file.name)
 
+            # Create the subcircuit file
+            ret = subcircuit.generate_spice_model(io_type=io_type,
+                                                  subcircuit_type=subcircuit_type,
+                                                  ibis_data=ibis_data,
+                                                  corner=corner,
+                                                  output_filepath=file.name)
+            if ret == 0:
+                message_success = f"SPICE subcircuit model successfully created at\n\n{file.name}"
+                messagebox.showinfo(title="Success", message=message_success)
 
-def browse_callback():
+            if ret == 1:
+                message_error1 = f"LTSpice subcircuit creation is not supported in this version"
+                messagebox.showinfo(title="Failed to create model", message=message_error1)
+
+
+def browse_ibis_file_callback():
 
     file = filedialog.askopenfile(parent=main_window,
                                   title='Choose a file',
@@ -151,18 +193,6 @@ def check_model_callback():
         check_model_window(ibis_data)
     else:
         messagebox.showinfo(title="No model Selected", message="Please select a valid IBIS file and model")
-
-
-# ---------------------------------------------------------------------------
-# Helper/Debug Functions
-# ---------------------------------------------------------------------------
-def print_values():
-    logging.info(f"File Name: {entry.get()}")
-    logging.info(f"Component Selected: {list_component.get(tk.ACTIVE)}")
-    logging.info(f"Model Selected: {list_model.get(tk.ACTIVE)}")
-    logging.info(f"Subcircuit Option: {radio_var1.get()}")
-    logging.info(f"Corner Select: {radio_var2.get()}")
-    logging.info(f"I/O Select: {radio_var3.get()}")
 
 
 # ---------------------------------------------------------------------------
@@ -289,7 +319,7 @@ if __name__ == '__main__':
     entry.pack(side=tk.LEFT)
     entry.config(state='disabled')
 
-    btn1 = tk.Button(master=frame1, text="Browse", padx=10, command=browse_callback)
+    btn1 = tk.Button(master=frame1, text="Browse", padx=10, command=browse_ibis_file_callback)
     btn1.pack(side=tk.LEFT)
 
     # ---------------------------------------------------------------------------
@@ -334,10 +364,10 @@ if __name__ == '__main__':
     # Radio Buttons for Corner Select
     label4 = tk.Label(master=frame3, text="Corner Select")
     label4.place(x=10, y=40)
-    radio_var2 = tk.IntVar()
-    radio3 = tk.Radiobutton(master=frame3, text="Weak-Slow", variable=radio_var2, value=0)
-    radio4 = tk.Radiobutton(master=frame3, text="Typical", variable=radio_var2, value=1)
-    radio5 = tk.Radiobutton(master=frame3, text="Fast-Strong", variable=radio_var2, value=2)
+    radio_var2 = tk.StringVar()
+    radio3 = tk.Radiobutton(master=frame3, text="Weak-Slow", variable=radio_var2, value="Weak-Slow")
+    radio4 = tk.Radiobutton(master=frame3, text="Typical", variable=radio_var2, value="Typical")
+    radio5 = tk.Radiobutton(master=frame3, text="Fast-Strong", variable=radio_var2, value="Fast-Strong")
     radio4.select()
     radio3.place(x=170, y=40)
     radio4.place(x=270, y=40)
@@ -348,7 +378,7 @@ if __name__ == '__main__':
     ToolTip(radio5, msg="combines the maximum (strong) I-V curves and maximum (fast) V-T waveforms", delay=0.2)
 
     # Radio Buttons for Selecting Input or Output Model Type
-    label5 = tk.Label(master=frame3, text="I/O Select")
+    label5 = tk.Label(master=frame3, text="I/O Select*")
     label5.place(x=10, y=70)
     radio_var3 = tk.StringVar()
     radio6 = tk.Radiobutton(master=frame3, text="Input", variable=radio_var3, value="Input")
@@ -366,7 +396,9 @@ if __name__ == '__main__':
     btn3 = tk.Button(master=frame3, text="Help", command=help_message_callback)
     btn3.place(x=10, y=110)
 
-    btn4 = tk.Button(master=frame3, text="Create SPICE Subcircuit", command=save_file_callback)
+    btn4 = tk.Button(master=frame3, text="Create SPICE Subcircuit", command=create_subcircuit_file_callback)
     btn4.place(x=50, y=110)
+
+    logging.info(check_latest_version())
 
     main_window.mainloop()
