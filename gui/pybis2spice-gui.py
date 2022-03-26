@@ -26,8 +26,6 @@ import icon
 
 _width = 740
 _height = 480
-_gui_version = version.get_version()
-_date = version.get_date()
 logging.basicConfig(level=logging.INFO)
 
 
@@ -35,10 +33,10 @@ logging.basicConfig(level=logging.INFO)
 # Version Check Functions
 # ---------------------------------------------------------------------------
 def check_latest_version():
-    latest_version = _gui_version
+    latest_version = version.get_version()
 
     # TODO - Change the URL to not have the token string after making it public
-    url = "https://raw.githubusercontent.com/kamratia1/pybis2spice/main/pybis2spice/version.py?token=GHSAT0AAAAAABR6PFYEY2IS2ETHZNUWXNGIYR63TZA"
+    url = "https://raw.githubusercontent.com/kamratia1/pybis2spice/main/pybis2spice/version.txt"
     try:
         version_source = urllib.request.urlopen(url)
         latest_version = version_source.read()
@@ -47,10 +45,10 @@ def check_latest_version():
 
     return latest_version
 
+
 # ---------------------------------------------------------------------------
 # Callback Functions from Buttons or other actions
 # ---------------------------------------------------------------------------
-
 def help_url_callback(url):
     webbrowser.open_new(url)
 
@@ -58,18 +56,18 @@ def help_url_callback(url):
 def help_message_callback():
     help_window = tk.Toplevel(main_window)
     help_window.title(f" Help")
-    help_window.minsize(550, 250)
+    help_window.minsize(550, 350)
     help_window.resizable(False, False)
     help_window.grab_set()
     help_window.geometry(f"+{main_window.winfo_rootx() + 50}+{main_window.winfo_rooty() + 50}")
     help_window.iconphoto(False, _icon_img)
 
     message1 = f"\n\nIBIS to SPICE Converter\n" \
-                   f"Version: {_gui_version}\n" \
-                   f"Release Date: {_date}\n\n\n" \
-                   f"Please report any bugs and issues at the link below.\n" \
-                   f"Detailed information on how the issue can be reproduced should be provided including \n" \
-                   f"any IBIS files used and version number of this program."
+               f"Version: {version.get_version()}\n" \
+               f"Release Date: {version.get_date()}\n\n\n" \
+               f"Please report any bugs and issues at the link below.\n" \
+               f"Detailed information on how the issue can be reproduced should be provided including \n" \
+               f"any IBIS files used and version number of this program."
 
     url1 = "https://github.com/kamratia1/pybis2spice/issues/"
     lbl_message1 = tk.Label(help_window, text=f"{message1}")
@@ -77,7 +75,7 @@ def help_message_callback():
     link1.bind("<Button-1>", lambda e: help_url_callback(url1))
 
     message2 = "Help on how to use this tool can be found within the README at "
-    url2 = "https://github.com/kamratia1/pybis2spice/\n\n"
+    url2 = "https://github.com/kamratia1/pybis2spice/"
     lbl_message2 = tk.Label(help_window, text=f"\n\n{message2}")
     link2 = tk.Label(help_window, text=url2, fg='#0000EE')
     link2.bind("<Button-1>", lambda e: help_url_callback(url2))
@@ -86,6 +84,20 @@ def help_message_callback():
     link1.pack(side=tk.TOP)
     lbl_message2.pack(side=tk.TOP)
     link2.pack(side=tk.TOP)
+
+    # latest_version = check_latest_version()
+    latest_version = '0.2'  # For Testing
+    latest_version_float = float(latest_version)
+    current_version_float = float(version.get_version())
+
+    if latest_version_float > current_version_float:
+        url3 = "https://github.com/kamratia1/pybis2spice/"
+        message3 = f"Version {latest_version} available to download from"
+        lbl_message3 = tk.Label(help_window, text=f"\n\n{message3}", font='Helvetica 12 bold')
+        link3 = tk.Label(help_window, text=url3, fg='#0000EE')
+        link3.bind("<Button-1>", lambda e: help_url_callback(url2))
+        lbl_message3.pack(side=tk.TOP)
+        link3.pack(side=tk.TOP)
 
 
 def create_subcircuit_file_callback():
@@ -299,7 +311,7 @@ if __name__ == '__main__':
     main_window = tk.Tk()
     main_window.geometry(f"{_width}x{_height}")
     main_window.resizable(False, False)
-    main_window.title(f" IBIS to SPICE Converter - version {_gui_version}")
+    main_window.title(f" IBIS to SPICE Converter - Version {version.get_version()}")
 
     # Set up the Icon
     # Using a base 64 image within a python file so that the exe build does not depend on an external icon file
@@ -398,7 +410,5 @@ if __name__ == '__main__':
 
     btn4 = tk.Button(master=frame3, text="Create SPICE Subcircuit", command=create_subcircuit_file_callback)
     btn4.place(x=50, y=110)
-
-    logging.info(check_latest_version())
 
     main_window.mainloop()
