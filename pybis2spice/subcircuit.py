@@ -3,7 +3,7 @@
 # Module Name: subcircuit.py
 #
 # Module Description:
-# Companion functions for the pybis2spice module to provide functionality to write to a subcircuit file
+# Companion functions for the pybis2spice module to create the SPICE subcircuit file
 #
 # ---------------------------------------------------------------------------
 
@@ -11,29 +11,146 @@
 # Imports
 # ---------------------------------------------------------------------------
 import numpy as np
+from pybis2spice import pybis2spice
+from pybis2spice import version
 
 
-# ---------------------------------------------------------------------------
-# Functions to assist with subcircuit creation
-# ---------------------------------------------------------------------------
-
-def create_subcircuit_file():
+def generate_spice_model(io_type, subcircuit_type, ibis_data, corner, output_filepath):
     """
-    Pseudo Code:
-    * Checks the model type
-    * And then calls the relevant function i.e. LTSpice or Generic
-    * If it in an input model, then that should be straightforward.
-    * Need to decide which model types we can support - I think this should be done at the GUI level
-    * This function actually creates the file
+    Wrapper around the subcircuit file creation functions. Calls the relevant function i.e. LTSpice or Generic
+
+        Parameters:
+            io_type - "Input" or "Output"
+            subcircuit_type - "LTSpice" or "Generic"
+            ibis_data - a DataModel object (defined in pybis2spice.py)
+            corner - "Weak-Slow" or "Typical" or "Fast-Strong"
+            output_filepath - path of output file
+
+        Returns:
+            The path of the created file
+    """
+    ret = None
+    if io_type == "Output":
+        if subcircuit_type == "Generic":
+            ret = create_generic_output_model(ibis_data, corner, output_filepath)
+
+        if subcircuit_type == "LTSpice":
+            ret = create_ltspice_output_model(ibis_data, corner, output_filepath)
+
+    if io_type == "Input":
+        ret = create_input_model(ibis_data, corner, output_filepath)
+
+    return ret
+
+
+def convert_corner_str_to_index(corner):
+    index = 1
+    if corner == "Weak-Slow":
+        index = 0
+    if corner == "Typical":
+        index = 1
+    if corner == "Fast-Strong":
+        index = 2
+
+    return index
+
+
+def create_input_model(ibis_data, corner, output_filepath):
+    """
+    Creates a SPICE generic subcircuit model.
+    Generic models are simple and only supports a single oscillation pulse with a given frequency
+
+    Parameters:
+        ibis_data - a DataModel object (defined in pybis2spice.py)
+        corner - "Weak-Slow" or "Typical" or "Fast-Strong"
+        output_filepath - path of output file
     """
 
+    _INDEX = convert_corner_str_to_index(corner)
+    _CORNER_INDEX = _INDEX + 1
 
-def create_subcircuit_str_generic():
-    pass
+    vcc = ibis_data.v_range[_INDEX]
+    pwr_clamp_ref = pybis2spice.get_reference(ibis_data.pwr_clamp_ref, ibis_data.v_range, _CORNER_INDEX)
+    gnd_clamp_ref = pybis2spice.get_reference(ibis_data.gnd_clamp_ref, 0, _CORNER_INDEX)
+
+    with open(output_filepath, 'w') as file:
+        file.write(f'.SUBCKT {ibis_data.model_name}-{corner} IN\n\n')
+
+        # Write some comments to help Identify the file
+        file.write(f'* Component: {ibis_data.component_name}\n')
+        file.write(f'* Model: {ibis_data.model_name}\n')
+        file.write(f'* Model Type: Input\n')
+        file.write(f'* Corner: {corner}\n')
+
+        # Add some model characteristics - Voltage...etc
+        file.write(f'* SPICE model created with pybis2spice version {version.get_version()}\n')
+        file.write(f'* For more info, visit https://github.com/kamratia1/pybis2spice/\n\n')
+
+        file.write(f'.param C_pkg = {ibis_data.c_pkg[_INDEX]}\n')
+        file.write(f'.param L_pkg = {ibis_data.l_pkg[_INDEX]}\n')
+        file.write(f'.param R_pkg = {ibis_data.r_pkg[_INDEX]}\n')
+        file.write(f'.param C_comp = {ibis_data.c_comp[_INDEX]}\n')
+        file.write(f'.param V_supply = {vcc}\n\n')
+
+        file.write(f'R1 IN MID {{R_pkg}}\n')
+        file.write(f'L1 DIE MID {{L_pkg}}\n')
+        file.write(f'C1 IN 0 {{C_pkg}}\n')
+        file.write(f'C2 DIE 0 {{C_comp}}\n')
+        file.write(f'V1 VCC 0 {{V_supply}}\n\n')
+
+        # Arbitrary Source definition for power and ground clamp
+        if ibis_data.iv_pwr_clamp is not None:
+            pwr_clamp_table_str = convert_iv_table_to_str(np.flip(pwr_clamp_ref - ibis_data.iv_pwr_clamp[:, 0]),
+                                                          np.flip(ibis_data.iv_pwr_clamp[:, _CORNER_INDEX]))
+            file.write(f'B1 die VCC I = table(V(DIE), {pwr_clamp_table_str})\n')
+
+        if ibis_data.iv_gnd_clamp is not None:
+            gnd_clamp_table_str = convert_iv_table_to_str(ibis_data.iv_gnd_clamp[:, 0] - gnd_clamp_ref,
+                                                          ibis_data.iv_gnd_clamp[:, _CORNER_INDEX])
+            file.write(f'B2 die 0 I = table(V(DIE), {gnd_clamp_table_str})\n\n')
+
+        file.write(f'.ends\n')
+
+    return 0
 
 
-def create_subcircuit_str_ltspice():
-    pass
+def create_generic_output_model(ibis_data, corner, output_filepath):
+    """
+    Creates a SPICE generic subcircuit model.
+    Generic models are simple and only supports a single oscillation pulse with a given frequency
+
+    Parameters:
+        ibis_data - a DataModel object (defined in pybis2spice.py)
+        corner - "Weak-Slow" or "Typical" or "Fast-Strong"
+        output_filepath - path of output file
+
+    Returns 0 if there are no errors in the creation
+    """
+    _INDEX = convert_corner_str_to_index(corner)
+    _CORNER_INDEX = _INDEX + 1
+
+    vcc = ibis_data.v_range[_INDEX]
+    pwr_clamp_ref = pybis2spice.get_reference(ibis_data.pwr_clamp_ref, ibis_data.v_range, _CORNER_INDEX)
+    gnd_clamp_ref = pybis2spice.get_reference(ibis_data.gnd_clamp_ref, 0, _CORNER_INDEX)
+    pullup_ref = pybis2spice.get_reference(ibis_data.pullup_ref, ibis_data.v_range, corner)
+    pulldown_ref = pybis2spice.get_reference(ibis_data.pulldown_ref, 0, corner)
+
+    return 0
+
+
+def create_ltspice_output_model(ibis_data, corner, output_filepath):
+    """
+    Creates a SPICE generic subcircuit model.
+    LTSpice specific models provide extra functionality to manipulate the waveform stimulus of the output
+
+    Parameters:
+        ibis_data - a DataModel object (defined in pybis2spice.py)
+        corner - "Weak-Slow" or "Typical" or "Fast-Strong"
+        output_filepath - path of output file
+
+    Returns 0 if there are no errors in the creation
+    """
+    return 1  # Setting this to 1 to ensure GUI can't proceed
 
 
 def convert_iv_table_to_str(voltage, current):
@@ -243,6 +360,3 @@ def create_output_subcircuit_file(ibis_data, output_filepath, k_param_rise, k_pa
             file.write(f'V10 oscillation_pd 0 PWL({k_dr_str})\n\n')
 
         file.write(f'.ends\n')
-
-
-
