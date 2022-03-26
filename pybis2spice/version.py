@@ -1,6 +1,6 @@
 
 # This version is for both the GUI and the main pybis2spice module
-__version__ = '0.1.0'
+__version__ = '0.1'
 __date__ = '15 March 2022'
 
 import os
