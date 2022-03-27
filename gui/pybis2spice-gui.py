@@ -22,15 +22,17 @@ import logging
 import webbrowser
 import urllib.request
 import base64
-import icon
+import img
+import re
 
 _width = 740
 _height = 480
 logging.basicConfig(level=logging.INFO)
+beta = "(Beta Testing Version)"   # TODO - Remove this after testing is over
 
 
 # ---------------------------------------------------------------------------
-# Version Check Functions
+# Helper Functions
 # ---------------------------------------------------------------------------
 def check_latest_version():
     latest_version = version.get_version()
@@ -44,6 +46,10 @@ def check_latest_version():
         pass
 
     return latest_version
+
+
+def validate_inputs():
+    pass
 
 
 # ---------------------------------------------------------------------------
@@ -86,7 +92,7 @@ def help_message_callback():
     link2.pack(side=tk.TOP)
 
     # latest_version = check_latest_version()
-    latest_version = '0.2'  # For Testing
+    latest_version = '0.2'  # TODO - For Testing
     latest_version_float = float(latest_version)
     current_version_float = float(version.get_version())
 
@@ -119,6 +125,8 @@ def create_subcircuit_file_callback():
     if not(hasattr(ibis_data, 'model')):
         messagebox.showinfo(title="No model Selected", message="Please select a valid IBIS file and model")
     else:
+        # TODO - Validate Inputs before proceeding to create the model
+        # CHECK that model radio button selected (Input or Output) match the model type selected
         logging.info(f"IBIS File: {ibis_file_path}")
         logging.info(f"Component Selected: {component_name}")
         logging.info(f"Model Selected: {model_name}")
@@ -126,7 +134,7 @@ def create_subcircuit_file_callback():
         logging.info(f"Corner: {corner}")
         logging.info(f"I/O Select: {io_type}")
 
-        filename = f'{ibis_data.model_name}-{corner}-{io_type}.sub'
+        filename = f'{ibis_data.model_name}-{io_type}-{corner}.sub'
 
         file = filedialog.asksaveasfile(parent=main_window,
                                         title='Choose a file',
@@ -142,12 +150,23 @@ def create_subcircuit_file_callback():
                                                   corner=corner,
                                                   output_filepath=file.name)
             if ret == 0:
+                warnings = ""
+                # Check file for any "WARNINGS and add to the message"
+                pattern = re.compile("WARNING")
+                for line in open(file.name):
+                    for match in re.finditer(pattern, line):
+                        warnings += line
+
                 message_success = f"SPICE subcircuit model successfully created at\n\n{file.name}"
+
+                if warnings != "":
+                    message_success += f"\n\nPlease note some WARNINGS within the SPICE subcircuit file created: \n{warnings}"
+
                 messagebox.showinfo(title="Success", message=message_success)
 
             if ret == 1:
-                message_error1 = f"LTSpice subcircuit creation is not supported in this version"
-                messagebox.showinfo(title="Failed to create model", message=message_error1)
+                message_error1 = f"SPICE subcircuit model generation failed."
+                messagebox.showerror(title="Failed to create model", message=message_error1)
 
 
 def browse_ibis_file_callback():
@@ -311,12 +330,12 @@ if __name__ == '__main__':
     main_window = tk.Tk()
     main_window.geometry(f"{_width}x{_height}")
     main_window.resizable(False, False)
-    main_window.title(f" IBIS to SPICE Converter - Version {version.get_version()}")
+    main_window.title(f" IBIS to SPICE Converter - Version {version.get_version()} {beta}")
 
     # Set up the Icon
     # Using a base 64 image within a python file so that the exe build does not depend on an external icon file
-    _icon_data = base64.b64decode(icon.get_icon())
-    _icon_img = tk.PhotoImage(data=icon.get_icon())
+    _icon_data = base64.b64decode(img.get_icon())
+    _icon_img = tk.PhotoImage(data=img.get_icon())
     main_window.iconphoto(False, _icon_img)
 
     # ---------------------------------------------------------------------------
