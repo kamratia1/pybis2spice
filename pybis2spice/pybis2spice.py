@@ -83,6 +83,7 @@ class DataModel(object):
             ibis = ecdtools.ibis.load_file(file_path, transform=True)
 
             self.file = ibis
+            self.file_name = ibis.file_name
             self.model = ibis.get_model_by_name(model_name)
             self.component = ibis.get_component_by_name(component_name)
             self.model_type = self.model.model_type
