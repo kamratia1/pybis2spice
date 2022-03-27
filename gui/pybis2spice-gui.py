@@ -28,7 +28,7 @@ import re
 _width = 740
 _height = 480
 logging.basicConfig(level=logging.INFO)
-beta = "(Beta Testing Version)"   # TODO - Remove this after testing is over
+beta = "(Test Version)"   # TODO - Remove this after testing is over
 
 
 # ---------------------------------------------------------------------------
@@ -205,37 +205,40 @@ def browse_ibis_file_callback():
     file = filedialog.askopenfile(parent=main_window,
                                   title='Choose a file',
                                   filetypes=[("IBIS files", ".ibs"), ("All files", "*")])
-    ibis_filepath = file.name
 
-    entry.config(state='normal')
-    entry.delete(0, tk.END)
-    entry.insert(0, ibis_filepath)
-    entry.config(state='disabled')
+    if file:
+        logging.info(file.name)
+        ibis_filepath = file.name
 
-    main_window.config(cursor="")
-    time.sleep(0.1)
+        entry.config(state='normal')
+        entry.delete(0, tk.END)
+        entry.insert(0, ibis_filepath)
+        entry.config(state='disabled')
 
-    list_component.delete(0, tk.END)
-    list_model.delete(0, tk.END)
+        main_window.config(cursor="")
+        time.sleep(0.1)
 
-    ibis_model = pybis2spice.get_ibis_model_ecdtools(ibis_filepath)
+        list_component.delete(0, tk.END)
+        list_model.delete(0, tk.END)
 
-    component_names = pybis2spice.list_components(ibis_model)
-    for index, component in enumerate(component_names, start=1):
-        list_component.insert(index, component)
+        ibis_model = pybis2spice.get_ibis_model_ecdtools(ibis_filepath)
 
-    model_names = pybis2spice.list_models(ibis_model)
-    for index, model in enumerate(model_names, start=1):
-        list_model.insert(index, model)
+        component_names = pybis2spice.list_components(ibis_model)
+        for index, component in enumerate(component_names, start=1):
+            list_component.insert(index, component)
 
-    # Set default selection to first item
-    list_component.select_set(0)
-    list_model.select_set(0)
-    list_component.event_generate("<<ListboxSelect>>")
-    list_model.event_generate("<<ListboxSelect>>")
+        model_names = pybis2spice.list_models(ibis_model)
+        for index, model in enumerate(model_names, start=1):
+            list_model.insert(index, model)
 
-    main_window.update()
-    main_window.config(cursor="")
+        # Set default selection to first item
+        list_component.select_set(0)
+        list_model.select_set(0)
+        list_component.event_generate("<<ListboxSelect>>")
+        list_model.event_generate("<<ListboxSelect>>")
+
+        main_window.update()
+        main_window.config(cursor="")
 
 
 def check_model_callback():
