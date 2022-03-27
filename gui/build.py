@@ -11,29 +11,85 @@ import PyInstaller.__main__
 import shutil
 import os
 from pybis2spice import version
+import fnmatch
 
-# Create the version txt file
-version.create_version_txt_file()
+_GENERATE_EXE_GUI = False
 
-# MAKE SURE THE WORKING DIRECTORY IS CLOSED BEFORE RUNNING THESE SCRIPTS
 
-if os.path.exists('pybis2spice-gui.exe'):
-    os.remove('pybis2spice-gui.exe')
+def create_gui_exe():
+    # MAKE SURE THE WORKING DIRECTORY IS CLOSED BEFORE RUNNING THESE SCRIPTS
 
-PyInstaller.__main__.run([
-    'pybis2spice-gui.py',
-    '--noconsole',
-    '-iicon.ico',
-    '--onefile'
-])
+    if os.path.exists(f'pybis2spice-gui_v{version.get_version()}.exe'):
+        os.remove(f'pybis2spice-gui_v{version.get_version()}.exe')
 
-shutil.copy(os.path.join('dist', 'pybis2spice-gui.exe'), os.getcwd())
+    PyInstaller.__main__.run([
+        'pybis2spice-gui.py',
+        '--noconsole',
+        '-iicon.ico',
+        '--onefile'
+    ])
 
-# Remove the files
-#shutil.rmtree('build')
-#os.remove('pybis2spice-gui.spec')
+    shutil.copy(os.path.join('dist', 'pybis2spice-gui.exe'), os.getcwd())
 
-# Move the exe file
-#shutil.move(os.path.join('dist', 'pybis2spice-gui.exe'), os.getcwd())
-#shutil.rmtree('dist')
+    path = os.path.join(os.getcwd(), 'pybis2spice-gui.exe')
+    return path
 
+
+def recursively_delete_files_with_pattern(directory_path, pattern):
+    # Get a list of all files in directory
+    for root_dir, subdirs, filenames in os.walk(directory_path):
+        # Find the files that matches the given pattern
+        for filename in fnmatch.filter(filenames, pattern):
+            try:
+                os.remove(os.path.join(root_dir, filename))
+            except OSError:
+                print("Error while deleting file")
+
+
+def folder_mopup():
+    # Check if version folder already exists within bin and delete it
+    folder_path = os.path.join(os.path.dirname(os.getcwd()), "bin", f"pybis2spice-v{version.get_version()}")
+    if os.path.exists(folder_path):
+        shutil.rmtree(folder_path)
+
+    # Create the version number folder (pybis2spice_vX.Y)
+    os.mkdir(folder_path)
+
+    # Copy the executable and the examples directory into the version number folder
+    src_gui_filepath = os.path.join(os.getcwd(), f'pybis2spice-gui_v{version.get_version()}.exe')
+    shutil.copy(src_gui_filepath, folder_path)
+
+    src_examples_dir = os.path.join(os.path.dirname(os.getcwd()), "examples")
+    dest_examples_dir = os.path.join(folder_path, "examples")
+    shutil.copytree(src_examples_dir, dest_examples_dir)
+
+    # Remove all SPICE generated .log and .raw files
+    recursively_delete_files_with_pattern(dest_examples_dir, "*.raw")
+    recursively_delete_files_with_pattern(dest_examples_dir, "*.log")
+
+
+if __name__ == '__main__':
+
+    version.create_version_txt_file()  # Create the version txt file
+
+    if _GENERATE_EXE_GUI:
+        gui_filepath = create_gui_exe()
+    else:
+        gui_filepath = os.path.join(os.getcwd(), 'pybis2spice-gui.exe')
+
+    # Rename the GUI file to include the version number
+    if os.path.exists(gui_filepath):
+        try:
+            os.rename(gui_filepath, os.path.join(os.getcwd(), f'pybis2spice-gui_v{version.get_version()}.exe'))
+        except:
+            pass
+
+    # Creates folder in bin directory and copies executable and example files
+    folder_mopup()
+
+    # Zip up the contents
+    folder_path = os.path.join(os.path.dirname(os.getcwd()), "bin", f"pybis2spice-v{version.get_version()}")
+    shutil.make_archive(base_name=folder_path,
+                        format='zip',
+                        root_dir=os.path.dirname(folder_path),
+                        base_dir=f"pybis2spice-v{version.get_version()}")
