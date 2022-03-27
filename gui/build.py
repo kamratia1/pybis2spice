@@ -13,7 +13,7 @@ import os
 from pybis2spice import version
 import fnmatch
 
-_GENERATE_EXE_GUI = False
+_GENERATE_EXE_GUI = True
 
 
 def create_gui_exe():
@@ -55,6 +55,11 @@ def folder_mopup():
     # Create the version number folder (pybis2spice_vX.Y)
     os.mkdir(folder_path)
 
+    # Check if zip exists and delete
+    zip_path = os.path.join(os.path.dirname(os.getcwd()), "bin", f"pybis2spice-v{version.get_version()}.zip")
+    if os.path.exists(zip_path):
+        os.remove(zip_path)
+
     # Copy the executable and the examples directory into the version number folder
     src_gui_filepath = os.path.join(os.getcwd(), f'pybis2spice-gui_v{version.get_version()}.exe')
     shutil.copy(src_gui_filepath, folder_path)
@@ -88,8 +93,8 @@ if __name__ == '__main__':
     folder_mopup()
 
     # Zip up the contents
-    folder_path = os.path.join(os.path.dirname(os.getcwd()), "bin", f"pybis2spice-v{version.get_version()}")
-    shutil.make_archive(base_name=folder_path,
+    base_path = os.path.join(os.path.dirname(os.getcwd()), "bin", f"pybis2spice-v{version.get_version()}")
+    shutil.make_archive(base_name=base_path,
                         format='zip',
-                        root_dir=os.path.dirname(folder_path),
+                        root_dir=os.path.dirname(base_path),
                         base_dir=f"pybis2spice-v{version.get_version()}")
