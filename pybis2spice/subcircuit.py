@@ -227,7 +227,7 @@ def create_input_model(ibis_data, corner, output_filepath):
         clamps_netlist = define_pwr_and_gnd_clamps(ibis_data, corner)
         file.write(clamps_netlist)
 
-        file.write(f'.ends\n')
+        file.write(f'.ENDS\n')
 
     return 0
 
@@ -285,7 +285,7 @@ def create_generic_output_model(ibis_data, corner, output_filepath):
             file.write(f'V5 Ku 0 PWL({k_u_osc_str})\n\n')
             file.write(f'V6 Kd 0 PWL({k_d_osc_str})\n\n')
 
-            file.write(f'.ends\n')
+            file.write(f'.ENDS\n')
     except:
         return_val = 1
 
@@ -299,33 +299,27 @@ def ltspice_stimulus_netlist_setup():
     # Setup the Stimulus setting options for the Pullup Waveform (Ku)
     setup_str = ".model SW SW(Ron=1n Roff=1G Vt=.5 Vh=-.4)\n\n"
     setup_str += "\n* Setup the Stimulus setting options for the Pullup Waveform (Ku)\n"
-    setup_str += "V10 SEL_K_U_OSC 0 {if(stimulus==1, 1, 0)}\n"
-    setup_str += "V11 SEL_K_U_OSC_INV 0 {if(stimulus==2, 1, 0)}\n"
-    setup_str += "V12 SEL_K_U_RISE 0 {if(stimulus==3, 1, 0)}\n"
-    setup_str += "V13 SEL_K_U_FALL 0 {if(stimulus==4, 1, 0)}\n"
-    setup_str += "V14 SEL_K_U_HIGH 0 {if(stimulus==5, 1, 0)}\n"
-    setup_str += "V15 SEL_K_U_LOW 0 {if(stimulus==6, 1, 0)}\n"
-    setup_str += "S1 Ku K_U_OSC SEL_K_U_OSC 0 SW\n"
-    setup_str += "S2 Ku K_U_OSC_INV SEL_K_U_OSC_INV 0 SW\n"
-    setup_str += "S3 Ku K_U_RISE SEL_K_U_RISE 0 SW\n"
-    setup_str += "S4 Ku K_U_FALL SEL_K_U_FALL 0 SW\n"
-    setup_str += "S5 Ku K_U_HIGH SEL_K_U_HIGH 0 SW\n"
-    setup_str += "S6 Ku K_U_LOW SEL_K_U_LOW 0 SW\n"
+    setup_str += "V10 OSC 0 {if(stimulus_==1, 1, 0)}\n"
+    setup_str += "V11 OSC_INV 0 {if(stimulus_==2, 1, 0)}\n"
+    setup_str += "V12 RISE 0 {if(stimulus_==3, 1, 0)}\n"
+    setup_str += "V13 FALL 0 {if(stimulus_==4, 1, 0)}\n"
+    setup_str += "V14 HIGH 0 {if(stimulus_==5, 1, 0)}\n"
+    setup_str += "V15 LOW 0 {if(stimulus_==6, 1, 0)}\n"
+    setup_str += "S1 Ku K_U_OSC OSC 0 SW\n"
+    setup_str += "S2 Ku K_U_OSC_INV OSC_INV 0 SW\n"
+    setup_str += "S3 Ku K_U_RISE RISE 0 SW\n"
+    setup_str += "S4 Ku K_U_FALL FALL 0 SW\n"
+    setup_str += "S5 Ku K_U_HIGH HIGH 0 SW\n"
+    setup_str += "S6 Ku K_U_LOW LOW 0 SW\n"
 
     # Setup the Stimulus setting options for the Pulldown Waveform (Kd)
     setup_str += "\n* Setup the Stimulus setting options for the Pulldown Waveform (Kd)\n"
-    setup_str += "V30 SEL_K_D_OSC 0 {if(stimulus==1, 1, 0)}\n"
-    setup_str += "V31 SEL_K_D_OSC_INV 0 {if(stimulus==2, 1, 0)}\n"
-    setup_str += "V32 SEL_K_D_RISE 0 {if(stimulus==3, 1, 0)}\n"
-    setup_str += "V33 SEL_K_D_FALL 0 {if(stimulus==4, 1, 0)}\n"
-    setup_str += "V34 SEL_K_D_HIGH 0 {if(stimulus==5, 1, 0)}\n"
-    setup_str += "V35 SEL_K_D_LOW 0 {if(stimulus==6, 1, 0)}\n"
-    setup_str += "S7 Kd K_D_OSC SEL_K_D_OSC 0 SW\n"
-    setup_str += "S8 Kd K_D_OSC_INV SEL_K_D_OSC_INV 0 SW\n"
-    setup_str += "S9 Kd K_D_RISE SEL_K_D_RISE 0 SW\n"
-    setup_str += "S10 Kd K_D_FALL SEL_K_D_FALL 0 SW\n"
-    setup_str += "S11 Kd K_D_HIGH SEL_K_D_HIGH 0 SW\n"
-    setup_str += "S12 Kd K_D_LOW SEL_K_D_LOW 0 SW\n"
+    setup_str += "S7 Kd K_D_OSC OSC 0 SW\n"
+    setup_str += "S8 Kd K_D_OSC_INV OSC_INV 0 SW\n"
+    setup_str += "S9 Kd K_D_RISE RISE 0 SW\n"
+    setup_str += "S10 Kd K_D_FALL FALL 0 SW\n"
+    setup_str += "S11 Kd K_D_HIGH HIGH 0 SW\n"
+    setup_str += "S12 Kd K_D_LOW LOW 0 SW\n"
 
     return setup_str
 
@@ -360,11 +354,15 @@ def create_ltspice_output_model(ibis_data, corner, output_filepath):
                               "*\t3 - Single Rising Edge with delay\n" \
                               "*\t4 - Falling Edge with delay\n" \
                               "*\t5 - Stuck High\n" \
-                              "*\t6 - Stuck Low\n\ns"
+                              "*\t6 - Stuck Low\n" \
+                              "*\t7 - HighZ (if 3-State output)\n\n"
             header = spice_header_info(ibis_data, corner, extra_info=parameter_info)
             file.write(header)
 
-            file.write(f'.SUBCKT {ibis_data.model_name}-{corner} OUT params: stimulus=1 freq=10Meg duty=0.5 delay=0 \n\n')
+            subcircuit = f'.SUBCKT {ibis_data.model_name}-{corner} '
+            subcircuit_params = f'OUT params: stimulus=1 freq=10Meg duty=0.5 delay=0 \n\n'
+
+            file.write(subcircuit + subcircuit_params)
 
             rlc_netlist = spice_rlc_netlist(ibis_data, corner, pin_name="OUT")
             file.write(rlc_netlist)
@@ -387,6 +385,13 @@ def create_ltspice_output_model(ibis_data, corner, output_filepath):
             file.write(f'.param calc_gap_neg = {{((1-duty)/freq) - {offset_pos_f} - {offset_neg_r}}}\n\n')
             file.write(f'.param GAP_POS = {{if(calc_gap_pos <= 0, 0.1e-12, calc_gap_pos)}}\n')
             file.write(f'.param GAP_NEG = {{if(calc_gap_neg <= 0, 0.1e-12, calc_gap_neg)}}\n\n')
+
+            max_stimulus = 6
+            if ibis_data.model_type.lower() == "3-state":
+                max_stimulus = 7
+
+            file.write(f'.param stimulus_ = {{if(stimulus < 1, 1, '
+                       f'if(stimulus > {max_stimulus}, {max_stimulus}, stimulus)}}\n\n')
 
             # Oscillation Strings
             ku_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KU], kf[:, _TIME], kf[:, _KU])
@@ -419,7 +424,12 @@ def create_ltspice_output_model(ibis_data, corner, output_filepath):
             file.write(f"V40 K_D_RISE 0 PWL({kdr_str})\n")
             file.write(f"V41 K_D_FALL 0 PWL({kdf_str})\n")
 
-            file.write(f'.ends\n')
+            if ibis_data.model_type.lower() == "3-state":
+                file.write("V50 EN 0 {if(stimulus==7, 1, 0)}\n")
+                file.write("S13 Ku 0 EN 0 SW\n")
+                file.write("S14 Kd 0 EN 0 SW\n")
+
+            file.write(f'\n .ENDS\n')
     except:
         return_val = 1
 

@@ -48,8 +48,26 @@ def check_latest_version():
     return latest_version
 
 
-def validate_inputs():
-    pass
+def validate_io_type(ibis_data, io_type):
+    # Check that io type selected matches the model_type
+    # Returns True if it passes validation
+
+    model_type = ibis_data.model_type
+
+    result = False
+    model_types_list = ["input", "i/o"]
+    if io_type == "Input":
+        for item in model_types_list:
+            if item == model_type.lower():
+                result = True
+
+    model_types_list = ["output", "i/o", "3-state"]
+    if io_type == "Output":
+        for item in model_types_list:
+            if item == model_type.lower():
+                result = True
+
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -122,11 +140,23 @@ def create_subcircuit_file_callback():
     time.sleep(0.1)
     main_window.config(cursor="")
 
-    if not(hasattr(ibis_data, 'model')):
-        messagebox.showinfo(title="No model Selected", message="Please select a valid IBIS file and model")
+    _PROCEED = False
+    if not(hasattr(ibis_data, 'model')):  # Check that model has been selected
+        messagebox.showwarning(title="No model Selected", message="Please select a valid IBIS file and model")
+
+    io_type_validation = validate_io_type(ibis_data, io_type)
+    if io_type_validation:
+        _PROCEED = True
     else:
-        # TODO - Validate Inputs before proceeding to create the model
-        # CHECK that model radio button selected (Input or Output) match the model type selected
+        message = f"I/O Select is invalid with IBIS model type. \n\n"
+        message += f"{ibis_data.model_name} Type: {ibis_data.model_type}\n\n"
+        if io_type == "Input":
+            message += "Please select the Output I/O type"
+        else:
+            message += "Please select the Input I/O type"
+        messagebox.showwarning(title="I/O mismatch", message=message)
+
+    if _PROCEED:
         logging.info(f"IBIS File: {ibis_file_path}")
         logging.info(f"Component Selected: {component_name}")
         logging.info(f"Model Selected: {model_name}")
@@ -154,13 +184,14 @@ def create_subcircuit_file_callback():
                 # Check file for any "WARNINGS and add to the message"
                 pattern = re.compile("WARNING")
                 for line in open(file.name):
-                    for match in re.finditer(pattern, line):
+                    for _ in re.finditer(pattern, line):
                         warnings += line
 
                 message_success = f"SPICE subcircuit model successfully created at\n\n{file.name}"
 
                 if warnings != "":
-                    message_success += f"\n\nPlease note some WARNINGS within the SPICE subcircuit file created: \n{warnings}"
+                    message_success += f"\n\nPlease note some WARNINGS within the SPICE subcircuit file created: \n"
+                    message_success += f"{warnings}"
 
                 messagebox.showinfo(title="Success", message=message_success)
 
@@ -326,6 +357,7 @@ def check_model_window(ibis_data_model):
 
 # Run the main main_window
 if __name__ == '__main__':
+
     # Main Window Top Level Config
     main_window = tk.Tk()
     main_window.geometry(f"{_width}x{_height}")
@@ -386,7 +418,7 @@ if __name__ == '__main__':
     radio_var1 = tk.StringVar()
     radio1 = tk.Radiobutton(master=frame3, text="LTSpice", variable=radio_var1, value="LTSpice")
     radio2 = tk.Radiobutton(master=frame3, text="Generic", variable=radio_var1, value="Generic")
-    radio2.select()
+    radio1.select()  # Select LTSpice as default type
     radio1.place(x=170, y=10)
     radio2.place(x=250, y=10)
     ToolTip(radio1, msg="produces a subcircuit file containing special syntax specific to LTSpice", delay=0.2)
@@ -409,7 +441,7 @@ if __name__ == '__main__':
     ToolTip(radio5, msg="combines the maximum (strong) I-V curves and maximum (fast) V-T waveforms", delay=0.2)
 
     # Radio Buttons for Selecting Input or Output Model Type
-    label5 = tk.Label(master=frame3, text="I/O Select*")
+    label5 = tk.Label(master=frame3, text="I/O Type")
     label5.place(x=10, y=70)
     radio_var3 = tk.StringVar()
     radio6 = tk.Radiobutton(master=frame3, text="Input", variable=radio_var3, value="Input")
@@ -418,8 +450,8 @@ if __name__ == '__main__':
     radio6.place(x=170, y=70)
     radio7.place(x=250, y=70)
 
-    label5_tooltip = "Subcircuit file can only be created for an input OR an output pin independently. " \
-                     "This option is only valid for IBIS models with I/O pin types"
+    label5_tooltip = "SPICE Subcircuit file can only be created for an input OR an output pin. " \
+                     "\nThis option selects the SPICE model type to generate when the IBIS model is of I/O type"
     ToolTip(label5, msg=label5_tooltip, delay=0.2)
     ToolTip(radio6, msg="subcircuit will be created for the input pin - no pullup/pulldown transistors", delay=0.2)
     ToolTip(radio7, msg="subcircuit will be created for the output pin - with pullup/pulldown transistors", delay=0.2)
