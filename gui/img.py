@@ -1,9 +1,9 @@
 # ---------------------------------------------------------------------------
 # Author: Kishan Amratia
 # Date: 07-March-2022
-# Module Name: icon.py
+# Module Name: img.py
 """
-The icon file encoded as a Base64 string
+Images are encoded as Base64 string
 """
 # ---------------------------------------------------------------------------
 
@@ -86,6 +86,9 @@ CqqAiaG+qhDACp/rMawUWKyeCixcmqwRGqtFciq1yn3QWqzNiqQICq1BUp8pMavgsq1JOqze6qOu
 eqeTypjH8iraCqqPOazqgZ8XQZCuQaOKcgPiKhCWiRP+akBUASVF0TGGapCZcB0lgRUgrSEGItkS
 8IqvQaoMoGFSqVquIxEDFLtLInEoRxohAQEAOw==
 '''
+
+# Use gif images to do the conversion
+
 
 def get_icon():
     return icon
