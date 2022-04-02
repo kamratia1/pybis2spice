@@ -180,14 +180,21 @@ def create_subcircuit_file_callback():
                                                   corner=corner,
                                                   output_filepath=file.name)
             if ret == 0:
-                warnings = ""
+                message_success = ""
+
                 # Check file for any "WARNINGS and add to the message"
+                warnings = ""
                 pattern = re.compile("WARNING")
                 for line in open(file.name):
                     for _ in re.finditer(pattern, line):
                         warnings += line
 
-                message_success = f"SPICE subcircuit model successfully created at\n\n{file.name}"
+                message_success += f"SPICE subcircuit model successfully created at:\n{file.name}"
+
+                # Create symbol
+                if subcircuit_type == "LTSpice":
+                    symbol_file = subcircuit.create_ltspice_symbol(ibis_data, corner, file.name, io_type)
+                    message_success += f"\n\nLTSpice symbol also created successfully at:\n{symbol_file}\n"
 
                 if warnings != "":
                     message_success += f"\n\nPlease note some WARNINGS within the SPICE subcircuit file created: \n"
@@ -431,9 +438,9 @@ if __name__ == '__main__':
     label4 = tk.Label(master=frame3, text="Corner Select")
     label4.place(x=10, y=40)
     radio_var2 = tk.StringVar()
-    radio3 = tk.Radiobutton(master=frame3, text="Weak-Slow", variable=radio_var2, value="Weak-Slow")
+    radio3 = tk.Radiobutton(master=frame3, text="Weak-Slow", variable=radio_var2, value="WeakSlow")
     radio4 = tk.Radiobutton(master=frame3, text="Typical", variable=radio_var2, value="Typical")
-    radio5 = tk.Radiobutton(master=frame3, text="Fast-Strong", variable=radio_var2, value="Fast-Strong")
+    radio5 = tk.Radiobutton(master=frame3, text="Fast-Strong", variable=radio_var2, value="FastStrong")
     radio4.select()
     radio3.place(x=170, y=40)
     radio4.place(x=270, y=40)

@@ -10,6 +10,8 @@
 # ---------------------------------------------------------------------------
 # Imports
 # ---------------------------------------------------------------------------
+import os.path
+
 import numpy as np
 from pybis2spice import pybis2spice
 from pybis2spice import version
@@ -27,7 +29,7 @@ def generate_spice_model(io_type, subcircuit_type, ibis_data, corner, output_fil
             io_type - "Input" or "Output"
             subcircuit_type - "LTSpice" or "Generic"
             ibis_data - a DataModel object (defined in pybis2spice.py)
-            corner - "Weak-Slow" or "Typical" or "Fast-Strong"
+            corner - "WeakSlow" or "Typical" or "FastStrong"
             output_filepath - path of output file
 
         Returns:
@@ -37,13 +39,13 @@ def generate_spice_model(io_type, subcircuit_type, ibis_data, corner, output_fil
     if io_type == "Output":
 
         if subcircuit_type == "Generic":
-            ret = create_generic_output_model(ibis_data, corner, output_filepath)
+            ret = create_generic_output_model(ibis_data, corner, io_type, output_filepath)
 
         if subcircuit_type == "LTSpice":
-            ret = create_ltspice_output_model(ibis_data, corner, output_filepath)
+            ret = create_ltspice_output_model(ibis_data, corner, io_type, output_filepath)
 
     if io_type == "Input":
-        ret = create_input_model(ibis_data, corner, output_filepath)
+        ret = create_input_model(ibis_data, corner, io_type, output_filepath)
 
     return ret
 
@@ -52,17 +54,17 @@ def convert_corner_str_to_index(corner):
     """
     Coverts the corner string into an index number used to reference the arrays within pybis2spice methods
     Parameters:
-        corner - "Typical", "Weak-Slow" or "Fast-Strong"
+        corner - "Typical", "WeakSlow" or "FastStrong"
 
     Returns:
-        index - 0, 1, 2 corresponding to the corner string "Typical", "Weak-Slow" and "Fast-Strong" respectively
+        index - 0, 1, 2 corresponding to the corner string "Typical", "WeakSlow" and "FastStrong" respectively
     """
     index = 0
     if corner == "Typical":
         index = 0
-    if corner == "Weak-Slow":
+    if corner == "WeakSlow":
         index = 1
-    if corner == "Fast-Strong":
+    if corner == "FastStrong":
         index = 2
 
     return index
@@ -74,7 +76,7 @@ def spice_header_info(ibis_data, corner, extra_info=""):
 
     Parameters:
         ibis_data - a DataModel object (defined in pybis2spice.py)
-        corner - "Typical", "Weak-Slow" or "Fast-Strong"
+        corner - "Typical", "WeakSlow" or "FastStrong"
     """
     st = "*********************************************************************\n*\n"
     st += f'* IBIS filename: {ibis_data.file_name}\n'
@@ -97,7 +99,7 @@ def spice_rlc_netlist(ibis_data, corner, pin_name):
 
     Parameters:
         ibis_data - a DataModel object (defined in pybis2spice.py)
-        corner - "Typical", "Weak-Slow" or "Fast-Strong"
+        corner - "Typical", "WeakSlow" or "FastStrong"
     """
     _INDEX = convert_corner_str_to_index(corner)
     c_pkg = ibis_data.c_pkg[_INDEX]
@@ -141,7 +143,7 @@ def define_pwr_and_gnd_clamps(ibis_data, corner):
     Arbitrary Source definition for power and ground clamp
     Parameters:
         ibis_data - a DataModel object (defined in pybis2spice.py)
-        corner - "Typical", "Weak-Slow" or "Fast-Strong"
+        corner - "Typical", "WeakSlow" or "FastStrong"
 
     Returns the netlist for the arbitrary source
     """
@@ -175,7 +177,7 @@ def define_pullup_and_pulldown_devices(ibis_data, corner):
     Arbitrary Source definition for pullup and pulldown devices
     Parameters:
         ibis_data - a DataModel object (defined in pybis2spice.py)
-        corner - "Typical", "Weak-Slow" or "Fast-Strong"
+        corner - "Typical", "WeakSlow" or "FastStrong"
 
     Returns the netlist for the arbitrary source for the devices
     """
@@ -203,14 +205,15 @@ def define_pullup_and_pulldown_devices(ibis_data, corner):
     return return_val
 
 
-def create_input_model(ibis_data, corner, output_filepath):
+def create_input_model(ibis_data, corner, io_type, output_filepath):
     """
     Creates a SPICE generic subcircuit model.
     Generic models are simple and only supports a single oscillation pulse with a given frequency
 
     Parameters:
         ibis_data - a DataModel object (defined in pybis2spice.py)
-        corner - "Typical", "Weak-Slow" or "Fast-Strong"
+        corner - "Typical", "WeakSlow" or "FastStrong"
+        io_type - "Input" or "Output"
         output_filepath - path of output file
     """
 
@@ -219,7 +222,7 @@ def create_input_model(ibis_data, corner, output_filepath):
         header = spice_header_info(ibis_data, corner)
         file.write(header)
 
-        file.write(f'.SUBCKT {ibis_data.model_name}-{corner} IN\n\n')
+        file.write(f'.SUBCKT {ibis_data.model_name}-{io_type}-{corner} IN\n\n')
 
         rlc_netlist = spice_rlc_netlist(ibis_data, corner, pin_name="IN")
         file.write(rlc_netlist)
@@ -232,14 +235,15 @@ def create_input_model(ibis_data, corner, output_filepath):
     return 0
 
 
-def create_generic_output_model(ibis_data, corner, output_filepath):
+def create_generic_output_model(ibis_data, corner, io_type, output_filepath):
     """
     Creates a SPICE generic subcircuit model.
     Generic models are simple and only supports a single oscillation pulse with a given frequency
 
     Parameters:
         ibis_data - a DataModel object (defined in pybis2spice.py)
-        corner - "Typical", "Weak-Slow" or "Fast-Strong"
+        corner - "Typical", "WeakSlow" or "FastStrong"
+        io_type - "Input" or "Output"
         k_param_rise - the k_parameter numpy array for the rising waveform (output of the solve_k_params_output method)
         k_param_fall - the k_parameter numpy array for the falling waveform (output of the solve_k_params_output method)
         output_filepath - path of output file
@@ -258,7 +262,7 @@ def create_generic_output_model(ibis_data, corner, output_filepath):
             header = spice_header_info(ibis_data, corner)
             file.write(header)
 
-            file.write(f'.SUBCKT {ibis_data.model_name}-{corner} OUT params: freq=10Meg duty=0.5\n\n')
+            file.write(f'.SUBCKT {ibis_data.model_name}-{io_type}-{corner} OUT params: freq=10Meg duty=0.5\n\n')
 
             rlc_netlist = spice_rlc_netlist(ibis_data, corner, pin_name="OUT")
             file.write(rlc_netlist)
@@ -324,14 +328,15 @@ def ltspice_stimulus_netlist_setup():
     return setup_str
 
 
-def create_ltspice_output_model(ibis_data, corner, output_filepath):
+def create_ltspice_output_model(ibis_data, corner, io_type, output_filepath):
     """
-    Creates a SPICE generic subcircuit model.
+    Creates a SPICE subcircuit model designed for LTSpice.
     LTSpice specific models provide extra functionality to manipulate the waveform stimulus of the output
 
     Parameters:
         ibis_data - a DataModel object (defined in pybis2spice.py)
-        corner - "Typical", "Weak-Slow" or "Fast-Strong"
+        corner - "Typical", "WeakSlow" or "FastStrong"
+        io_type - "Input" or "Output"
         output_filepath - path of output file
 
     Returns 0 if there are no errors in the creation
@@ -351,7 +356,7 @@ def create_ltspice_output_model(ibis_data, corner, output_filepath):
             parameter_info += "* Stimulus Options: \n" \
                               "*\t1 - Oscillate at given freq and duty\n" \
                               "*\t2 - Inverted Oscillate at given freq and duty\n" \
-                              "*\t3 - Single Rising Edge with delay\n" \
+                              "*\t3 - Rising Edge with delay\n" \
                               "*\t4 - Falling Edge with delay\n" \
                               "*\t5 - Stuck High\n" \
                               "*\t6 - Stuck Low\n" \
@@ -359,7 +364,7 @@ def create_ltspice_output_model(ibis_data, corner, output_filepath):
             header = spice_header_info(ibis_data, corner, extra_info=parameter_info)
             file.write(header)
 
-            subcircuit = f'.SUBCKT {ibis_data.model_name}-{corner} '
+            subcircuit = f'.SUBCKT {ibis_data.model_name}-{io_type}-{corner} '
             subcircuit_params = f'OUT params: stimulus=1 freq=10Meg duty=0.5 delay=0 \n\n'
 
             file.write(subcircuit + subcircuit_params)
@@ -429,11 +434,65 @@ def create_ltspice_output_model(ibis_data, corner, output_filepath):
                 file.write("S13 Ku 0 EN 0 SW\n")
                 file.write("S14 Kd 0 EN 0 SW\n")
 
-            file.write(f'\n .ENDS\n')
+            file.write(f'\n.ENDS\n')
     except:
         return_val = 1
 
     return return_val
+
+
+def create_ltspice_symbol(ibis_data, corner, model_path, io_type):
+    """
+    Creates an LTSpice symbol for the given model_path within the model_path directory
+    This helps with the relative referencing of the model_path within the symbol file.
+    The symbol is given the same name as the model for consistency.
+
+    Parameters:
+        ibis_data - a DataModel object (defined in pybis2spice.py)
+        corner - "Typical", "WeakSlow" or "FastStrong"
+        model_path - filepath of the subcircuit model
+        io_type - "Input" or "Output"
+
+    Returns the filepath of the created symbol
+    """
+    symbol_path = os.path.join(os.path.dirname(model_path), f'{ibis_data.model_name}-{io_type}-{corner}.asy')
+    symbol_value = f'{ibis_data.model_name}-{io_type}-{corner}'
+    model_filename = os.path.basename(model_path)
+
+    with open(symbol_path, 'w') as file:
+        if io_type == "Input":
+            file.write(f"Version 4\n")
+            file.write(f"SymbolType BLOCK\n")
+            file.write(f"LINE Normal 0 32 48 64\n")
+            file.write(f"LINE Normal 0 96 48 64\n")
+            file.write(f"LINE Normal 0 96 0 32\n")
+            file.write(f"WINDOW 0 8 16 Left 2\n")
+            file.write(f"WINDOW 3 8 120 Left 2\n")
+            file.write(f"SYMATTR Value {symbol_value}\n")
+            file.write(f"SYMATTR Prefix X\n")
+            file.write(f"SYMATTR ModelFile {model_filename}\n")
+            file.write(f"PIN 0 64 NONE 0\n")
+            file.write(f"PINATTR PinName IN\n")
+            file.write(f"PINATTR SpiceOrder 1\n")
+
+        if io_type == "Output":
+            file.write(f"Version 4\n")
+            file.write(f"SymbolType BLOCK\n")
+            file.write(f"LINE Normal -16 0 32 -32\n")
+            file.write(f"LINE Normal -16 -64 -16 0\n")
+            file.write(f"LINE Normal 32 -32 -16 -64\n")
+            file.write(f"WINDOW 0 0 -80 Bottom 2\n")
+            file.write(f"WINDOW 3 8 24 Top 2\n")
+            file.write(f"WINDOW 39 8 48 Top 2\n")
+            file.write(f"SYMATTR Value {symbol_value}\n")
+            file.write(f"SYMATTR SpiceLine stimulus=1 freq=10Meg duty=0.5 delay=0\n")
+            file.write(f"SYMATTR Prefix X\n")
+            file.write(f"SYMATTR ModelFile {model_filename}\n")
+            file.write(f"PIN 32 -32 NONE 8\n")
+            file.write(f"PINATTR PinName OUT\n")
+            file.write(f"PINATTR SpiceOrder 1\n")
+
+    return symbol_path
 
 
 def convert_iv_table_to_str(voltage, current):
