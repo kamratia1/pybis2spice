@@ -24,6 +24,7 @@ import urllib.request
 import base64
 import img
 import re
+import os
 
 _width = 740
 _height = 480
@@ -52,7 +53,11 @@ def validate_io_type(ibis_data, io_type):
     # Check that io type selected matches the model_type
     # Returns True if it passes validation
 
-    model_type = ibis_data.model_type
+    model_type = ""
+    try:
+        model_type = ibis_data.model_type
+    except:
+        pass
 
     result = False
     model_types_list = ["input", "i/o"]
@@ -144,67 +149,139 @@ def create_subcircuit_file_callback():
     if not(hasattr(ibis_data, 'model')):  # Check that model has been selected
         messagebox.showwarning(title="No model Selected", message="Please select a valid IBIS file and model")
 
-    io_type_validation = validate_io_type(ibis_data, io_type)
-    if io_type_validation:
-        _PROCEED = True
     else:
-        message = f"I/O Select is invalid with IBIS model type. \n\n"
-        message += f"{ibis_data.model_name} Type: {ibis_data.model_type}\n\n"
-        if io_type == "Input":
-            message += "Please select the Output I/O type"
+        io_type_validation = validate_io_type(ibis_data, io_type)
+        if io_type_validation:
+            _PROCEED = True
         else:
-            message += "Please select the Input I/O type"
-        messagebox.showwarning(title="I/O mismatch", message=message)
+            message = f"I/O Select is invalid with IBIS model type. \n\n"
+            message += f"{ibis_data.model_name} Type: {ibis_data.model_type}\n\n"
+            if io_type == "Input":
+                message += "Please select the Output I/O type"
+            else:
+                message += "Please select the Input I/O type"
+            messagebox.showwarning(title="I/O mismatch", message=message)
 
-    if _PROCEED:
-        logging.info(f"IBIS File: {ibis_file_path}")
-        logging.info(f"Component Selected: {component_name}")
-        logging.info(f"Model Selected: {model_name}")
-        logging.info(f"Subcircuit Type: {subcircuit_type}")
-        logging.info(f"Corner: {corner}")
-        logging.info(f"I/O Select: {io_type}")
+        if _PROCEED:
+            logging.info(f"IBIS File: {ibis_file_path}")
+            logging.info(f"Component Selected: {component_name}")
+            logging.info(f"Model Selected: {model_name}")
+            logging.info(f"Subcircuit Type: {subcircuit_type}")
+            logging.info(f"Corner: {corner}")
+            logging.info(f"I/O Select: {io_type}")
 
-        filename = f'{ibis_data.model_name}-{io_type}-{corner}.sub'
+            if corner == "All":
+                file = filedialog.askdirectory(parent=main_window)
+            else:
+                filename = f'{ibis_data.model_name}-{io_type}-{corner}.sub'
+                file = filedialog.asksaveasfile(parent=main_window,
+                                                title='Choose a file',
+                                                filetypes=[("Subcircuit Files", ".sub")],
+                                                initialfile=f"{filename}")
 
-        file = filedialog.asksaveasfile(parent=main_window,
-                                        title='Choose a file',
-                                        filetypes=[("Subcircuit Files", ".sub")],
-                                        initialfile=f"{filename}")
-        if file:
-            logging.info(file.name)
+            # If file/directory was chosen by user
+            if file:
+                if corner == "All":
+                    logging.info(f"Chosen Directory: {file}")
 
-            # Create the subcircuit file
-            ret = subcircuit.generate_spice_model(io_type=io_type,
-                                                  subcircuit_type=subcircuit_type,
-                                                  ibis_data=ibis_data,
-                                                  corner=corner,
-                                                  output_filepath=file.name)
-            if ret == 0:
-                message_success = ""
+                    _corner = "WeakSlow"
+                    filename1 = f'{ibis_data.model_name}-{io_type}-{_corner}.sub'
+                    filepath1 = os.path.join(file, filename1)
+                    ret1 = subcircuit.generate_spice_model(io_type=io_type,
+                                                           subcircuit_type=subcircuit_type,
+                                                           ibis_data=ibis_data,
+                                                           corner=_corner,
+                                                           output_filepath=filepath1)
 
-                # Check file for any "WARNINGS and add to the message"
-                warnings = ""
-                pattern = re.compile("WARNING")
-                for line in open(file.name):
-                    for _ in re.finditer(pattern, line):
-                        warnings += line
+                    _corner = "Typical"
+                    filename2 = f'{ibis_data.model_name}-{io_type}-{_corner}.sub'
+                    filepath2 = os.path.join(file, filename2)
+                    ret2 = subcircuit.generate_spice_model(io_type=io_type,
+                                                           subcircuit_type=subcircuit_type,
+                                                           ibis_data=ibis_data,
+                                                           corner=_corner,
+                                                           output_filepath=filepath2)
 
-                message_success += f"SPICE subcircuit model successfully created at:\n{file.name}"
+                    _corner = "FastStrong"
+                    filename3 = f'{ibis_data.model_name}-{io_type}-{_corner}.sub'
+                    filepath3 = os.path.join(file, filename3)
+                    ret3 = subcircuit.generate_spice_model(io_type=io_type,
+                                                           subcircuit_type=subcircuit_type,
+                                                           ibis_data=ibis_data,
+                                                           corner=_corner,
+                                                           output_filepath=filepath3)
 
-                # Create symbol
-                if subcircuit_type == "LTSpice":
-                    symbol_file = subcircuit.create_ltspice_symbol(ibis_data, corner, file.name, io_type)
-                    message_success += f"\n\nLTSpice symbol also created successfully at:\n{symbol_file}\n"
+                    ret = ret1 + ret2 + ret3
 
-                if warnings != "":
-                    message_success += f"\n\nPlease note some WARNINGS within the SPICE subcircuit file created: \n"
-                    message_success += f"{warnings}"
+                    if ret == 0:
+                        message_success = ""
 
-                messagebox.showinfo(title="Success", message=message_success)
+                        # Check file for any "WARNINGS and add to the message"
+                        warnings = ""
+                        pattern = re.compile("WARNING")
+                        files = [filepath1, filepath2, filepath3]
+                        for _file in files:
+                            for line in open(_file):
+                                for _ in re.finditer(pattern, line):
+                                    warnings += line
 
-            if ret == 1:
-                message_error1 = f"SPICE subcircuit model generation failed."
-                messagebox.showerror(title="Failed to create model", message=message_error1)
+                        message_success += f"SPICE subcircuit models successfully created at:\n{file}"
+
+                        # Create symbol
+                        if subcircuit_type == "LTSpice":
+                            symbol_file1 = subcircuit.create_ltspice_symbol(ibis_data, "WeakSlow", filepath1, io_type)
+                            symbol_file2 = subcircuit.create_ltspice_symbol(ibis_data, "Typical", filepath2, io_type)
+                            symbol_file3 = subcircuit.create_ltspice_symbol(ibis_data, "FastStrong", filepath3, io_type)
+
+                            logging.info(f"LTSpice Symbol created at: {symbol_file1}")
+                            logging.info(f"LTSpice Symbol created at: {symbol_file2}")
+                            logging.info(f"LTSpice Symbol created at: {symbol_file3}")
+
+                            message_success += f"\n\nLTSpice symbols also created successfully at:\n{file}\n"
+
+                        if warnings != "":
+                            message_success += f"\n\nWARNINGS within the SPICE subcircuit file: \n"
+                            message_success += f"{warnings}"
+
+                        messagebox.showinfo(title="Success", message=message_success)
+                    else:
+                        message_error = f"SPICE subcircuit model generation failed."
+                        messagebox.showerror(title="Failed to create model", message=message_error)
+
+                else:
+                    logging.info(f"Chosen File: {file.name}")
+                    # Create the subcircuit file
+                    ret = subcircuit.generate_spice_model(io_type=io_type,
+                                                          subcircuit_type=subcircuit_type,
+                                                          ibis_data=ibis_data,
+                                                          corner=corner,
+                                                          output_filepath=file.name)
+                    if ret == 0:
+                        message_success = ""
+
+                        # Check file for any "WARNINGS and add to the message"
+                        warnings = ""
+                        pattern = re.compile("WARNING")
+                        for line in open(file.name):
+                            for _ in re.finditer(pattern, line):
+                                warnings += line
+
+                        message_success += f"SPICE subcircuit model successfully created at:\n{file.name}"
+
+                        # Create symbol
+                        if subcircuit_type == "LTSpice":
+                            symbol_file = subcircuit.create_ltspice_symbol(ibis_data, corner, file.name, io_type)
+                            message_success += f"\n\nLTSpice symbol also created successfully at:\n{symbol_file}\n"
+
+                        if warnings != "":
+                            message_success += f"\n\nWARNINGS within the SPICE subcircuit file: \n"
+                            message_success += f"{warnings}"
+
+                        messagebox.showinfo(title="Success", message=message_success)
+
+                    else:
+                        message_error = f"SPICE subcircuit model generation failed."
+                        messagebox.showerror(title="Failed to create model", message=message_error)
 
 
 def browse_ibis_file_callback():
@@ -441,30 +518,33 @@ if __name__ == '__main__':
     radio3 = tk.Radiobutton(master=frame3, text="Weak-Slow", variable=radio_var2, value="WeakSlow")
     radio4 = tk.Radiobutton(master=frame3, text="Typical", variable=radio_var2, value="Typical")
     radio5 = tk.Radiobutton(master=frame3, text="Fast-Strong", variable=radio_var2, value="FastStrong")
+    radio6 = tk.Radiobutton(master=frame3, text="All", variable=radio_var2, value="All")
     radio4.select()
     radio3.place(x=170, y=40)
     radio4.place(x=270, y=40)
     radio5.place(x=350, y=40)
+    radio6.place(x=450, y=40)
 
     ToolTip(radio3, msg="combines the minimum (weak) I-V curves and minimum (slow) V-T waveforms", delay=0.2)
     ToolTip(radio4, msg="combines the typical I-V curves and typical V-T waveforms", delay=0.2)
     ToolTip(radio5, msg="combines the maximum (strong) I-V curves and maximum (fast) V-T waveforms", delay=0.2)
+    ToolTip(radio6, msg="creates the SPIC subcircuit files for all corners", delay=0.2)
 
     # Radio Buttons for Selecting Input or Output Model Type
     label5 = tk.Label(master=frame3, text="I/O Type")
     label5.place(x=10, y=70)
     radio_var3 = tk.StringVar()
-    radio6 = tk.Radiobutton(master=frame3, text="Input", variable=radio_var3, value="Input")
-    radio7 = tk.Radiobutton(master=frame3, text="Output", variable=radio_var3, value="Output")
-    radio6.select()
-    radio6.place(x=170, y=70)
-    radio7.place(x=250, y=70)
+    radio7 = tk.Radiobutton(master=frame3, text="Input", variable=radio_var3, value="Input")
+    radio8 = tk.Radiobutton(master=frame3, text="Output", variable=radio_var3, value="Output")
+    radio7.select()
+    radio7.place(x=170, y=70)
+    radio8.place(x=250, y=70)
 
     label5_tooltip = "SPICE Subcircuit file can only be created for an input OR an output pin. " \
                      "\nThis option selects the SPICE model type to generate when the IBIS model is of I/O type"
     ToolTip(label5, msg=label5_tooltip, delay=0.2)
-    ToolTip(radio6, msg="subcircuit will be created for the input pin - no pullup/pulldown transistors", delay=0.2)
-    ToolTip(radio7, msg="subcircuit will be created for the output pin - with pullup/pulldown transistors", delay=0.2)
+    ToolTip(radio7, msg="subcircuit will be created for the input pin - no pullup/pulldown transistors", delay=0.2)
+    ToolTip(radio8, msg="subcircuit will be created for the output pin - with pullup/pulldown transistors", delay=0.2)
 
     btn3 = tk.Button(master=frame3, text="Help", command=help_message_callback)
     btn3.place(x=10, y=110)
