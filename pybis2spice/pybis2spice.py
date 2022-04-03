@@ -93,7 +93,7 @@ class DataModel(object):
             self.c_pkg = extract_range_param(self.component.package.c_pkg)
             self.c_comp = extract_range_param(self.model.c_comp)
             self.v_range = extract_range_param(self.model.voltage_range)
-            self.temp_range = extract_range_param(self.model.temperature_range) # Newly Added
+            self.temp_range = extract_range_param(self.model.temperature_range)
             self.pullup_ref = extract_range_param(self.model.pullup_reference)
             self.pulldown_ref = extract_range_param(self.model.pulldown_reference)
             self.pwr_clamp_ref = extract_range_param(self.model.power_clamp_reference)
