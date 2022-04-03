@@ -376,7 +376,7 @@ def check_model_window(ibis_data):
     model_table.insert(parent="", index="end", iid=2, text="", values=("Model Name", f"{ibis_data.model_name}"))
     model_table.insert(parent="", index="end", iid=3, text="", values=("Model Type", f"{ibis_data.model_type}"))
 
-    summary_table = ttk.Treeview(tab1, height=7, selectmode="none")
+    summary_table = ttk.Treeview(tab1, height=10, selectmode="none")
     summary_table["columns"] = ("Parameter", "Symbol", "Min", "Typ", "Max", "Unit")
     summary_table.column("#0", width=0, stretch=tk.NO)
     summary_table.column("Parameter", anchor=tk.W, width=150)
@@ -396,25 +396,25 @@ def check_model_window(ibis_data):
 
     # Package Resistance
     summary_table.insert(parent="", index="end", iid=0, text="",
-                         values=("Package Resistance", "R_pkg",
+                         values=("Package Resistance", "r_pkg",
                                  f"{ibis_data.r_pkg[1]*1e3:.2f}",
                                  f"{ibis_data.r_pkg[0]*1e3:.2f}",
                                  f"{ibis_data.r_pkg[2]*1e3:.2f}", u"m\u03A9"))
     # Package Inductance
     summary_table.insert(parent="", index="end", iid=1, text="",
-                         values=("Package Inductance", "L_pkg",
+                         values=("Package Inductance", "l_pkg",
                                  f"{ibis_data.l_pkg[1]*1e9:.4f}",
                                  f"{ibis_data.l_pkg[0]*1e9:.4f}",
                                  f"{ibis_data.l_pkg[2]*1e9:.4f}", "nH"))
     # Package Capacitance
     summary_table.insert(parent="", index="end", iid=2, text="",
-                         values=("Package Capacitance", "C_pkg",
+                         values=("Package Capacitance", "c_pkg",
                                  f"{ibis_data.c_pkg[1]*1e12:.3f}",
                                  f"{ibis_data.c_pkg[0]*1e12:.3f}",
                                  f"{ibis_data.c_pkg[2]*1e12:.3f}", "pF"))
     # Die Capacitance
     summary_table.insert(parent="", index="end", iid=3, text="",
-                         values=("Die Capacitance", "C_comp",
+                         values=("Die Capacitance", "c_comp",
                                  f"{ibis_data.l_pkg[1]*1e12:.3f}",
                                  f"{ibis_data.l_pkg[0]*1e12:.3f}",
                                  f"{ibis_data.l_pkg[2]*1e12:.3f}", "pF"))
@@ -424,17 +424,45 @@ def check_model_window(ibis_data):
     # Voltage Range
     if ibis_data.v_range is not None:
         summary_table.insert(parent="", index="end", iid=5, text="",
-                             values=("Voltage Range", "V_range",
+                             values=("Voltage Range", "v_range",
                                      f"{ibis_data.v_range[1]}",
                                      f"{ibis_data.v_range[0]}",
                                      f"{ibis_data.v_range[2]}", "V"))
     # Temperature Range
     if ibis_data.temp_range is not None:
         summary_table.insert(parent="", index="end", iid=6, text="",
-                             values=("Temperature Range", "Temp_range",
-                                     f"{ibis_data.temp_range[1]}",
+                             values=("Temperature Range", "temp_range",
+                                     f"{min(ibis_data.temp_range[1], ibis_data.temp_range[2])}",
                                      f"{ibis_data.temp_range[0]}",
-                                     f"{ibis_data.temp_range[2]}", u"\u00B0C"))
+                                     f"{max(ibis_data.temp_range[2], ibis_data.temp_range[1])}", u"\u00B0C"))
+
+    if ibis_data.pullup_ref is not None:
+        summary_table.insert(parent="", index="end", iid=7, text="",
+                             values=("Pullup Reference", "pullup_ref",
+                                     f"{ibis_data.pullup_ref[1]}",
+                                     f"{ibis_data.pullup_ref[0]}",
+                                     f"{ibis_data.pullup_ref[2]}", "V"))
+
+    if ibis_data.pulldown_ref is not None:
+        summary_table.insert(parent="", index="end", iid=8, text="",
+                             values=("Pulldown Reference", "pulldown_ref",
+                                     f"{ibis_data.pulldown_ref[1]}",
+                                     f"{ibis_data.pulldown_ref[0]}",
+                                     f"{ibis_data.pulldown_ref[2]}", "V"))
+
+    if ibis_data.pwr_clamp_ref is not None:
+        summary_table.insert(parent="", index="end", iid=9, text="",
+                             values=("Power Clamp Reference", "pwr_clamp_ref",
+                                     f"{ibis_data.pwr_clamp_ref[1]}",
+                                     f"{ibis_data.pwr_clamp_ref[0]}",
+                                     f"{ibis_data.pwr_clamp_ref[2]}", "V"))
+
+    if ibis_data.gnd_clamp_ref is not None:
+        summary_table.insert(parent="", index="end", iid=10, text="",
+                             values=("Ground Clamp Reference", "gnd_clamp_ref",
+                                     f"{ibis_data.gnd_clamp_ref[1]}",
+                                     f"{ibis_data.gnd_clamp_ref[0]}",
+                                     f"{ibis_data.gnd_clamp_ref[2]}", "V"))
 
     tab0_lbl0 = tk.Label(tab1, text="\nIBIS Model Parameters")
     tab0_lbl0.pack()
@@ -446,9 +474,9 @@ def check_model_window(ibis_data):
 
     # Pullup Tab
     if ibis_data.iv_pullup is not None:
+        fig1 = plot.plot_iv_data_single(ibis_data.iv_pullup, "Pullup device IV data")
         tab2 = ttk.Frame(tab_parent)
         tab_parent.add(tab2, text="Pullup")
-        fig1 = plot.plot_iv_data_single(ibis_data.iv_pullup, "Pullup device IV data")
         tab2_lbl = tk.Label(tab2, text="Pullup voltage data referenced to pullup reference or voltage rail")
         tab2_lbl.pack()
         canvas1 = FigureCanvasTkAgg(fig1, master=tab2)
@@ -460,9 +488,9 @@ def check_model_window(ibis_data):
 
     # Pulldown Tab
     if ibis_data.iv_pulldown is not None:
+        fig2 = plot.plot_iv_data_single(ibis_data.iv_pulldown, "Pulldown device IV data")
         tab3 = ttk.Frame(tab_parent)
         tab_parent.add(tab3, text="Pulldown")
-        fig2 = plot.plot_iv_data_single(ibis_data.iv_pulldown, "Pulldown device IV data")
         canvas2 = FigureCanvasTkAgg(fig2, master=tab3)
         canvas2.draw()
         canvas2.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
@@ -472,9 +500,9 @@ def check_model_window(ibis_data):
 
     # Power Clamp Tab
     if ibis_data.iv_pwr_clamp is not None:
+        fig3 = plot.plot_iv_data_single(ibis_data.iv_pwr_clamp, "Power clamp IV data")
         tab4 = ttk.Frame(tab_parent)
         tab_parent.add(tab4, text="Power Clamp")
-        fig3 = plot.plot_iv_data_single(ibis_data.iv_pwr_clamp, "Power clamp IV data")
         tab4_lbl = tk.Label(tab4, text="Power clamp voltage data referenced to power clamp reference or voltage rail")
         tab4_lbl.pack()
         canvas3 = FigureCanvasTkAgg(fig3, master=tab4)
@@ -486,9 +514,9 @@ def check_model_window(ibis_data):
 
     # Ground Clamp Tab
     if ibis_data.iv_gnd_clamp is not None:
+        fig4 = plot.plot_iv_data_single(ibis_data.iv_gnd_clamp, "Ground clamp IV data")
         tab5 = ttk.Frame(tab_parent)
         tab_parent.add(tab5, text="Ground Clamp")
-        fig4 = plot.plot_iv_data_single(ibis_data.iv_gnd_clamp, "Ground clamp IV data")
         canvas4 = FigureCanvasTkAgg(fig4, master=tab5)
         canvas4.draw()
         canvas4.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
@@ -498,10 +526,10 @@ def check_model_window(ibis_data):
 
     # Rising Waveform Tab
     if ibis_data.vt_rising:
-        tab6 = ttk.Frame(tab_parent)
-        tab_parent.add(tab6, text="Rising Waveforms")
         fig5 = plot.plot_vt_rising_waveform_data(ibis_data)
         plt.subplots_adjust(top=0.8)
+        tab6 = ttk.Frame(tab_parent)
+        tab_parent.add(tab6, text="Rising Waveforms")
         canvas5 = FigureCanvasTkAgg(fig5, master=tab6)
         canvas5.draw()
         canvas5.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
@@ -511,10 +539,10 @@ def check_model_window(ibis_data):
 
     # Falling Waveform Tab
     if ibis_data.vt_falling:
-        tab7 = ttk.Frame(tab_parent)
-        tab_parent.add(tab7, text="Falling Waveforms")
         fig6 = plot.plot_vt_falling_waveform_data(ibis_data)
         plt.subplots_adjust(top=0.8)
+        tab7 = ttk.Frame(tab_parent)
+        tab_parent.add(tab7, text="Falling Waveforms")
         canvas6 = FigureCanvasTkAgg(fig6, master=tab7)
         canvas6.draw()
         canvas6.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
@@ -523,6 +551,20 @@ def check_model_window(ibis_data):
         canvas6.get_tk_widget().pack()
 
     tab_parent.pack(expand=1, fill=tk.BOTH)
+
+
+def add_check_window_plot_tab(tab_parent, fig, tab_title, tab_text=""):
+    tab = ttk.Frame(tab_parent)
+    tab_parent.add(tab, text=tab_title)
+    tab_lbl = tk.Label(tab, text=tab_text)
+    tab_lbl.pack()
+    plt.subplots_adjust(top=0.8)
+    canvas = FigureCanvasTkAgg(fig, master=tab)
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+    toolbar = NavigationToolbar2Tk(canvas, tab)
+    toolbar.update()
+    canvas.get_tk_widget().pack()
 
 
 # Run the main main_window
