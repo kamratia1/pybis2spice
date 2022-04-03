@@ -416,7 +416,43 @@ def solve_k_params_output(ibis_data, corner=1, waveform_type="Rising"):
     return k_param
 
 
-# TODO add function to solve k_param for open-drain type models - In Future Release
+def solve_k_params_output_open_drain(ibis_data, corner=1, waveform_type="Rising"):
+    """
+    Solves the k-parameters for the ibis model for any 2 or 3-state output buffer
+
+        Parameters:
+            ibis_data: a DataModel object
+            corner: value of either 1, 2 or 3 to signify the typical , slow-weak (min) and fast-strong (max) corners
+            waveform_type: Either "Rising" or "Falling" to select the waveform to solve the k-parameters for
+
+        Returns:
+            k_param: numpy array with 2 columns [time, k_d]
+    """
+    # Input
+    if waveform_type == "Rising":
+        waveform1 = ibis_data.vt_rising[0]
+    elif waveform_type == "Falling":
+        waveform1 = ibis_data.vt_falling[0]
+    else:
+        sys.exit(f"Error in waveform_type parameter. Expected 'Rising' or 'Falling', got {waveform_type}")
+
+    # Get only unique samples for time array
+    time = np.unique(waveform1.data[:, 0])
+    array_size = np.shape(time)[0]
+
+    # Getting the device and clamp current waveforms based on the new time series
+    (i_pu1, i_pd1, i_pc1, i_gc1, i_rfix1, i_c_comp1) = generating_current_data(ibis_data, time, corner, waveform1)
+
+    # creating a k-parameters array with columns [time, k_d]
+    k_param = np.zeros([array_size, 2])
+    k_param[:, 0] = time
+
+    # Rearrange equation and solve for k_u and kd parameters
+    i1 = i_gc1 + i_pc1 + i_rfix1 - i_c_comp1
+    k_param[:, 1] = np.divide(i1, i_pd1)
+
+    return k_param
+
 
 def differentiate(y, x):
     """
