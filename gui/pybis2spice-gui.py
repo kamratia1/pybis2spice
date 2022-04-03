@@ -6,6 +6,7 @@
 A tkinter GUI for helping users to convert IBIS models into SPICE models
 """
 # ---------------------------------------------------------------------------
+import matplotlib.pyplot as plt
 
 from pybis2spice import pybis2spice
 from pybis2spice import plot
@@ -37,7 +38,6 @@ logging.basicConfig(level=logging.INFO)
 def check_latest_version():
     latest_version = version.get_version()
 
-    # TODO - Change the URL to not have the token string after making it public
     url = "https://raw.githubusercontent.com/kamratia1/pybis2spice/main/pybis2spice/version.txt"
     try:
         version_source = urllib.request.urlopen(url)
@@ -346,47 +346,40 @@ def check_model_callback():
 # ---------------------------------------------------------------------------
 # Check Model Window
 # ---------------------------------------------------------------------------
-def check_model_window(ibis_data_model):
+def check_model_window(ibis_data):
     data_window = tk.Toplevel(main_window)
-    data_window.title(f"Check IBIS Model - {ibis_data_model.model_name}")
+    data_window.geometry(f"+{main_window.winfo_rootx() + 50}+{main_window.winfo_rooty() + 50}")
+    data_window.title(f"Check IBIS Model - {ibis_data.model_name}")
     data_window.minsize(700, 700)
     data_window.grab_set()
-    data_window.geometry(f"+{main_window.winfo_rootx() + 50}+{main_window.winfo_rooty() + 50}")
     data_window.iconphoto(False, _icon_img)
     data_window.resizable(False, False)
 
     tab_parent = ttk.Notebook(data_window)
-    tab0 = ttk.Frame(tab_parent)
+
+    # Summary Tab
     tab1 = ttk.Frame(tab_parent)
-    tab2 = ttk.Frame(tab_parent)
-    tab3 = ttk.Frame(tab_parent)
-    tab4 = ttk.Frame(tab_parent)
-    tab5 = ttk.Frame(tab_parent)
-    tab6 = ttk.Frame(tab_parent)
-    tab7 = ttk.Frame(tab_parent)
+    tab_parent.add(tab1, text="Summary")
 
-    # Summary Page
-    tab_parent.add(tab0, text="Summary (New)")
-
-    model_table = ttk.Treeview(tab0, height=4, selectmode="none")
+    model_table = ttk.Treeview(tab1, height=4, selectmode="none")
     model_table["columns"] = ("Item", "Value")
     model_table.column("#0", width=0, stretch=tk.NO)
     model_table.column("Item", anchor=tk.W, width=150)
     model_table.column("Value", anchor=tk.W, width=400)
-    model_table.bind('<Motion>', 'break')  # Stop people from resizing: https://stackoverflow.com/a/71710427
+    model_table.bind('<Motion>', 'break')  # Stop users from resizing table: https://stackoverflow.com/a/71710427
 
     model_table.heading("Item", text="Item", anchor=tk.W)
     model_table.heading("Value", text="Value", anchor=tk.W)
 
-    model_table.insert(parent="", index="end", iid=0, text="", values=("IBIS File", f"{ibis_data_model.file}"))
-    model_table.insert(parent="", index="end", iid=1, text="", values=("Component Name", "Some Model"))
-    model_table.insert(parent="", index="end", iid=2, text="", values=("Model Name", "Some Model"))
-    model_table.insert(parent="", index="end", iid=3, text="", values=("Model Type", "I/O"))
+    model_table.insert(parent="", index="end", iid=0, text="", values=("IBIS File", f"{ibis_data.file_name}"))
+    model_table.insert(parent="", index="end", iid=1, text="", values=("Component Name", f"{ibis_data.component_name}"))
+    model_table.insert(parent="", index="end", iid=2, text="", values=("Model Name", f"{ibis_data.model_name}"))
+    model_table.insert(parent="", index="end", iid=3, text="", values=("Model Type", f"{ibis_data.model_type}"))
 
-    summary_table = ttk.Treeview(tab0, height=7, selectmode="none")
+    summary_table = ttk.Treeview(tab1, height=7, selectmode="none")
     summary_table["columns"] = ("Parameter", "Symbol", "Min", "Typ", "Max", "Unit")
     summary_table.column("#0", width=0, stretch=tk.NO)
-    summary_table.column("Parameter", anchor=tk.CENTER, width=150)
+    summary_table.column("Parameter", anchor=tk.W, width=150)
     summary_table.column("Symbol", anchor=tk.CENTER, width=100)
     summary_table.column("Min", anchor=tk.CENTER, width=80)
     summary_table.column("Typ", anchor=tk.CENTER, width=80)
@@ -401,106 +394,135 @@ def check_model_window(ibis_data_model):
     summary_table.heading("Max", text="Max", anchor=tk.CENTER)
     summary_table.heading("Unit", text="Unit", anchor=tk.CENTER)
 
+    # Package Resistance
     summary_table.insert(parent="", index="end", iid=0, text="",
-                         values=("Package Resistance", "R_pkg", "0.029", "0.030", "0.031", u"m\u03A9"))
+                         values=("Package Resistance", "R_pkg",
+                                 f"{ibis_data.r_pkg[1]*1e3:.2f}",
+                                 f"{ibis_data.r_pkg[0]*1e3:.2f}",
+                                 f"{ibis_data.r_pkg[2]*1e3:.2f}", u"m\u03A9"))
+    # Package Inductance
     summary_table.insert(parent="", index="end", iid=1, text="",
-                         values=("Package Inductance", "L_pkg", "0.029", "0.030", "0.031", "nH"))
+                         values=("Package Inductance", "L_pkg",
+                                 f"{ibis_data.l_pkg[1]*1e9:.4f}",
+                                 f"{ibis_data.l_pkg[0]*1e9:.4f}",
+                                 f"{ibis_data.l_pkg[2]*1e9:.4f}", "nH"))
+    # Package Capacitance
     summary_table.insert(parent="", index="end", iid=2, text="",
-                         values=("Package Capacitance", "C_pkg",  "0.029", "0.030", "0.031", "pF"))
+                         values=("Package Capacitance", "C_pkg",
+                                 f"{ibis_data.c_pkg[1]*1e12:.3f}",
+                                 f"{ibis_data.c_pkg[0]*1e12:.3f}",
+                                 f"{ibis_data.c_pkg[2]*1e12:.3f}", "pF"))
+    # Die Capacitance
     summary_table.insert(parent="", index="end", iid=3, text="",
-                         values=("Die Capacitance", "C_comp", "0.029", "0.030", "0.031", "pF"))
-    summary_table.insert(parent="", index="end", iid=4, text="",
-                         values=("", "", "", "", "", ""))
-    summary_table.insert(parent="", index="end", iid=5, text="",
-                         values=("Voltage Range", "V_range", "3.0", "3.3", "3.6", "V"))
-    summary_table.insert(parent="", index="end", iid=6, text="",
-                         values=("Temperature Range", "Temp_range", "-40", "25", "125", u"\u00B0C"))
+                         values=("Die Capacitance", "C_comp",
+                                 f"{ibis_data.l_pkg[1]*1e12:.3f}",
+                                 f"{ibis_data.l_pkg[0]*1e12:.3f}",
+                                 f"{ibis_data.l_pkg[2]*1e12:.3f}", "pF"))
+    # Empty Line
+    summary_table.insert(parent="", index="end", iid=4, text="", values=("", "", "", "", "", ""))
 
-    tab0_lbl0 = tk.Label(tab0, text="\nModel Parameters")
+    # Voltage Range
+    if ibis_data.v_range is not None:
+        summary_table.insert(parent="", index="end", iid=5, text="",
+                             values=("Voltage Range", "V_range",
+                                     f"{ibis_data.v_range[1]}",
+                                     f"{ibis_data.v_range[0]}",
+                                     f"{ibis_data.v_range[2]}", "V"))
+    # Temperature Range
+    if ibis_data.temp_range is not None:
+        summary_table.insert(parent="", index="end", iid=6, text="",
+                             values=("Temperature Range", "Temp_range",
+                                     f"{ibis_data.temp_range[1]}",
+                                     f"{ibis_data.temp_range[0]}",
+                                     f"{ibis_data.temp_range[2]}", u"\u00B0C"))
+
+    tab0_lbl0 = tk.Label(tab1, text="\nIBIS Model Parameters")
     tab0_lbl0.pack()
     model_table.pack()
 
-    tab0_lbl1 = tk.Label(tab0, text="\nModel Parameters")
+    tab0_lbl1 = tk.Label(tab1, text="\n")
     tab0_lbl1.pack()
     summary_table.pack()
 
-    # Remaining Tabs
-    tab_parent.add(tab1, text="Summary")
-
-    if ibis_data_model.iv_pullup is not None:
+    # Pullup Tab
+    if ibis_data.iv_pullup is not None:
+        tab2 = ttk.Frame(tab_parent)
         tab_parent.add(tab2, text="Pullup")
-    if ibis_data_model.iv_pulldown is not None:
+        fig1 = plot.plot_iv_data_single(ibis_data.iv_pullup, "Pullup device IV data")
+        tab2_lbl = tk.Label(tab2, text="Pullup voltage data referenced to pullup reference or voltage rail")
+        tab2_lbl.pack()
+        canvas1 = FigureCanvasTkAgg(fig1, master=tab2)
+        canvas1.draw()
+        canvas1.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        toolbar1 = NavigationToolbar2Tk(canvas1, tab2)
+        toolbar1.update()
+        canvas1.get_tk_widget().pack()
+
+    # Pulldown Tab
+    if ibis_data.iv_pulldown is not None:
+        tab3 = ttk.Frame(tab_parent)
         tab_parent.add(tab3, text="Pulldown")
-    if ibis_data_model.iv_pwr_clamp is not None:
+        fig2 = plot.plot_iv_data_single(ibis_data.iv_pulldown, "Pulldown device IV data")
+        canvas2 = FigureCanvasTkAgg(fig2, master=tab3)
+        canvas2.draw()
+        canvas2.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        toolbar2 = NavigationToolbar2Tk(canvas2, tab3)
+        toolbar2.update()
+        canvas2.get_tk_widget().pack()
+
+    # Power Clamp Tab
+    if ibis_data.iv_pwr_clamp is not None:
+        tab4 = ttk.Frame(tab_parent)
         tab_parent.add(tab4, text="Power Clamp")
-    if ibis_data_model.iv_gnd_clamp is not None:
+        fig3 = plot.plot_iv_data_single(ibis_data.iv_pwr_clamp, "Power clamp IV data")
+        tab4_lbl = tk.Label(tab4, text="Power clamp voltage data referenced to power clamp reference or voltage rail")
+        tab4_lbl.pack()
+        canvas3 = FigureCanvasTkAgg(fig3, master=tab4)
+        canvas3.draw()
+        canvas3.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        toolbar3 = NavigationToolbar2Tk(canvas3, tab4)
+        toolbar3.update()
+        canvas3.get_tk_widget().pack()
+
+    # Ground Clamp Tab
+    if ibis_data.iv_gnd_clamp is not None:
+        tab5 = ttk.Frame(tab_parent)
         tab_parent.add(tab5, text="Ground Clamp")
+        fig4 = plot.plot_iv_data_single(ibis_data.iv_gnd_clamp, "Ground clamp IV data")
+        canvas4 = FigureCanvasTkAgg(fig4, master=tab5)
+        canvas4.draw()
+        canvas4.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        toolbar4 = NavigationToolbar2Tk(canvas4, tab5)
+        toolbar4.update()
+        canvas4.get_tk_widget().pack()
 
-    if ibis_data_model.vt_rising:
+    # Rising Waveform Tab
+    if ibis_data.vt_rising:
+        tab6 = ttk.Frame(tab_parent)
         tab_parent.add(tab6, text="Rising Waveforms")
-    if ibis_data_model.vt_falling:
+        fig5 = plot.plot_vt_rising_waveform_data(ibis_data)
+        plt.subplots_adjust(top=0.8)
+        canvas5 = FigureCanvasTkAgg(fig5, master=tab6)
+        canvas5.draw()
+        canvas5.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        toolbar5 = NavigationToolbar2Tk(canvas5, tab6)
+        toolbar5.update()
+        canvas5.get_tk_widget().pack()
+
+    # Falling Waveform Tab
+    if ibis_data.vt_falling:
+        tab7 = ttk.Frame(tab_parent)
         tab_parent.add(tab7, text="Falling Waveforms")
-
-    tab1_lbl = tk.Label(tab1, text=f"{ibis_data_model}")
-    tab1_lbl.pack(side=tk.TOP)
-
-    tab2_lbl = tk.Label(tab2, text="Pullup voltage data referenced to pullup reference or voltage rail")
-    tab2_lbl.pack()
-
-    tab4_lbl = tk.Label(tab4, text="Power clamp voltage data referenced to power clamp reference or voltage rail")
-    tab4_lbl.pack()
+        fig6 = plot.plot_vt_falling_waveform_data(ibis_data)
+        plt.subplots_adjust(top=0.8)
+        canvas6 = FigureCanvasTkAgg(fig6, master=tab7)
+        canvas6.draw()
+        canvas6.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        toolbar6 = NavigationToolbar2Tk(canvas6, tab7)
+        toolbar6.update()
+        canvas6.get_tk_widget().pack()
 
     tab_parent.pack(expand=1, fill=tk.BOTH)
-
-    fig1 = plot.plot_iv_data_single(ibis_data_model.iv_pullup, "Pullup device IV data")
-    fig2 = plot.plot_iv_data_single(ibis_data_model.iv_pulldown, "Pulldown device IV data")
-    fig3 = plot.plot_iv_data_single(ibis_data_model.iv_pwr_clamp, "Power clamp IV data")
-    fig4 = plot.plot_iv_data_single(ibis_data_model.iv_gnd_clamp, "Ground clamp IV data")
-
-    fig5 = plot.plot_vt_rising_waveform_data(ibis_data_model)
-    fig6 = plot.plot_vt_falling_waveform_data(ibis_data_model)
-
-    canvas1 = FigureCanvasTkAgg(fig1, master=tab2)
-    canvas2 = FigureCanvasTkAgg(fig2, master=tab3)
-    canvas3 = FigureCanvasTkAgg(fig3, master=tab4)
-    canvas4 = FigureCanvasTkAgg(fig4, master=tab5)
-    canvas5 = FigureCanvasTkAgg(fig5, master=tab6)
-    canvas6 = FigureCanvasTkAgg(fig6, master=tab7)
-
-    canvas1.draw()
-    canvas2.draw()
-    canvas3.draw()
-    canvas4.draw()
-    canvas5.draw()
-    canvas6.draw()
-
-    canvas1.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-    canvas2.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-    canvas3.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-    canvas4.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-    canvas5.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-    canvas6.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-
-    toolbar1 = NavigationToolbar2Tk(canvas1, tab2)
-    toolbar2 = NavigationToolbar2Tk(canvas2, tab3)
-    toolbar3 = NavigationToolbar2Tk(canvas3, tab4)
-    toolbar4 = NavigationToolbar2Tk(canvas4, tab5)
-    toolbar5 = NavigationToolbar2Tk(canvas5, tab6)
-    toolbar6 = NavigationToolbar2Tk(canvas6, tab7)
-
-    toolbar1.update()
-    toolbar2.update()
-    toolbar3.update()
-    toolbar4.update()
-    toolbar5.update()
-    toolbar6.update()
-
-    canvas1.get_tk_widget().pack()
-    canvas2.get_tk_widget().pack()
-    canvas3.get_tk_widget().pack()
-    canvas4.get_tk_widget().pack()
-    canvas5.get_tk_widget().pack()
-    canvas6.get_tk_widget().pack()
 
 
 # Run the main main_window
