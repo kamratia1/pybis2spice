@@ -346,6 +346,7 @@ def check_model_callback():
 # ---------------------------------------------------------------------------
 # Check Model Window
 # ---------------------------------------------------------------------------
+
 def check_model_window(ibis_data):
     data_window = tk.Toplevel(main_window)
     data_window.geometry(f"+{main_window.winfo_rootx() + 50}+{main_window.winfo_rooty() + 50}")
@@ -361,210 +362,130 @@ def check_model_window(ibis_data):
     tab1 = ttk.Frame(tab_parent)
     tab_parent.add(tab1, text="Summary")
 
-    model_table = ttk.Treeview(tab1, height=4, selectmode="none")
-    model_table["columns"] = ("Item", "Value")
-    model_table.column("#0", width=0, stretch=tk.NO)
-    model_table.column("Item", anchor=tk.W, width=150)
-    model_table.column("Value", anchor=tk.W, width=400)
-    model_table.bind('<Motion>', 'break')  # Stop users from resizing table: https://stackoverflow.com/a/71710427
-
-    model_table.heading("Item", text="Item", anchor=tk.W)
-    model_table.heading("Value", text="Value", anchor=tk.W)
-
-    model_table.insert(parent="", index="end", iid=0, text="", values=("IBIS File", f"{ibis_data.file_name}"))
-    model_table.insert(parent="", index="end", iid=1, text="", values=("Component Name", f"{ibis_data.component_name}"))
-    model_table.insert(parent="", index="end", iid=2, text="", values=("Model Name", f"{ibis_data.model_name}"))
-    model_table.insert(parent="", index="end", iid=3, text="", values=("Model Type", f"{ibis_data.model_type}"))
-
-    summary_table = ttk.Treeview(tab1, height=10, selectmode="none")
-    summary_table["columns"] = ("Parameter", "Symbol", "Min", "Typ", "Max", "Unit")
-    summary_table.column("#0", width=0, stretch=tk.NO)
-    summary_table.column("Parameter", anchor=tk.W, width=150)
-    summary_table.column("Symbol", anchor=tk.CENTER, width=100)
-    summary_table.column("Min", anchor=tk.CENTER, width=80)
-    summary_table.column("Typ", anchor=tk.CENTER, width=80)
-    summary_table.column("Max", anchor=tk.CENTER, width=80)
-    summary_table.column("Unit", anchor=tk.CENTER, width=60)
-    summary_table.bind('<Motion>', 'break')  # Stop people from resizing: https://stackoverflow.com/a/71710427
-
-    summary_table.heading("Parameter", text="Parameter", anchor=tk.CENTER)
-    summary_table.heading("Symbol", text="Symbol", anchor=tk.CENTER)
-    summary_table.heading("Min", text="Min", anchor=tk.CENTER)
-    summary_table.heading("Typ", text="Typ", anchor=tk.CENTER)
-    summary_table.heading("Max", text="Max", anchor=tk.CENTER)
-    summary_table.heading("Unit", text="Unit", anchor=tk.CENTER)
-
-    # Package Resistance
-    summary_table.insert(parent="", index="end", iid=0, text="",
-                         values=("Package Resistance", "r_pkg",
-                                 f"{ibis_data.r_pkg[1]*1e3:.2f}",
-                                 f"{ibis_data.r_pkg[0]*1e3:.2f}",
-                                 f"{ibis_data.r_pkg[2]*1e3:.2f}", u"m\u03A9"))
-    # Package Inductance
-    summary_table.insert(parent="", index="end", iid=1, text="",
-                         values=("Package Inductance", "l_pkg",
-                                 f"{ibis_data.l_pkg[1]*1e9:.4f}",
-                                 f"{ibis_data.l_pkg[0]*1e9:.4f}",
-                                 f"{ibis_data.l_pkg[2]*1e9:.4f}", "nH"))
-    # Package Capacitance
-    summary_table.insert(parent="", index="end", iid=2, text="",
-                         values=("Package Capacitance", "c_pkg",
-                                 f"{ibis_data.c_pkg[1]*1e12:.3f}",
-                                 f"{ibis_data.c_pkg[0]*1e12:.3f}",
-                                 f"{ibis_data.c_pkg[2]*1e12:.3f}", "pF"))
-    # Die Capacitance
-    summary_table.insert(parent="", index="end", iid=3, text="",
-                         values=("Die Capacitance", "c_comp",
-                                 f"{ibis_data.l_pkg[1]*1e12:.3f}",
-                                 f"{ibis_data.l_pkg[0]*1e12:.3f}",
-                                 f"{ibis_data.l_pkg[2]*1e12:.3f}", "pF"))
-    # Empty Line
-    summary_table.insert(parent="", index="end", iid=4, text="", values=("", "", "", "", "", ""))
-
-    # Voltage Range
-    if ibis_data.v_range is not None:
-        summary_table.insert(parent="", index="end", iid=5, text="",
-                             values=("Voltage Range", "v_range",
-                                     f"{ibis_data.v_range[1]}",
-                                     f"{ibis_data.v_range[0]}",
-                                     f"{ibis_data.v_range[2]}", "V"))
-    # Temperature Range
-    if ibis_data.temp_range is not None:
-        summary_table.insert(parent="", index="end", iid=6, text="",
-                             values=("Temperature Range", "temp_range",
-                                     f"{min(ibis_data.temp_range[1], ibis_data.temp_range[2])}",
-                                     f"{ibis_data.temp_range[0]}",
-                                     f"{max(ibis_data.temp_range[2], ibis_data.temp_range[1])}", u"\u00B0C"))
-
-    if ibis_data.pullup_ref is not None:
-        summary_table.insert(parent="", index="end", iid=7, text="",
-                             values=("Pullup Reference", "pullup_ref",
-                                     f"{ibis_data.pullup_ref[1]}",
-                                     f"{ibis_data.pullup_ref[0]}",
-                                     f"{ibis_data.pullup_ref[2]}", "V"))
-
-    if ibis_data.pulldown_ref is not None:
-        summary_table.insert(parent="", index="end", iid=8, text="",
-                             values=("Pulldown Reference", "pulldown_ref",
-                                     f"{ibis_data.pulldown_ref[1]}",
-                                     f"{ibis_data.pulldown_ref[0]}",
-                                     f"{ibis_data.pulldown_ref[2]}", "V"))
-
-    if ibis_data.pwr_clamp_ref is not None:
-        summary_table.insert(parent="", index="end", iid=9, text="",
-                             values=("Power Clamp Reference", "pwr_clamp_ref",
-                                     f"{ibis_data.pwr_clamp_ref[1]}",
-                                     f"{ibis_data.pwr_clamp_ref[0]}",
-                                     f"{ibis_data.pwr_clamp_ref[2]}", "V"))
-
-    if ibis_data.gnd_clamp_ref is not None:
-        summary_table.insert(parent="", index="end", iid=10, text="",
-                             values=("Ground Clamp Reference", "gnd_clamp_ref",
-                                     f"{ibis_data.gnd_clamp_ref[1]}",
-                                     f"{ibis_data.gnd_clamp_ref[0]}",
-                                     f"{ibis_data.gnd_clamp_ref[2]}", "V"))
+    model_summary_table = create_model_summary_table(ibis_data, tab1)
+    model_parameter_table = create_model_parameters_table(ibis_data, tab1)
 
     tab0_lbl0 = tk.Label(tab1, text="\nIBIS Model Parameters")
-    tab0_lbl0.pack()
-    model_table.pack()
-
     tab0_lbl1 = tk.Label(tab1, text="\n")
-    tab0_lbl1.pack()
-    summary_table.pack()
+
+    tab0_lbl0.pack()  # Heading for the Tables
+    model_summary_table.pack()  # Add the Model Summary Table
+    tab0_lbl1.pack()  # Empty Line between the Tables
+    model_parameter_table.pack()  # Add the Model Parameter Table
 
     # Pullup Tab
     if ibis_data.iv_pullup is not None:
         fig1 = plot.plot_iv_data_single(ibis_data.iv_pullup, "Pullup device IV data")
-        tab2 = ttk.Frame(tab_parent)
-        tab_parent.add(tab2, text="Pullup")
-        tab2_lbl = tk.Label(tab2, text="Pullup voltage data referenced to pullup reference or voltage rail")
-        tab2_lbl.pack()
-        canvas1 = FigureCanvasTkAgg(fig1, master=tab2)
-        canvas1.draw()
-        canvas1.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        toolbar1 = NavigationToolbar2Tk(canvas1, tab2)
-        toolbar1.update()
-        canvas1.get_tk_widget().pack()
+        lbl = "Pullup voltage data referenced to pullup reference or voltage rail"
+        add_check_window_plot_tab(tab_parent, fig1, "Pullup", tab_text=lbl)
 
     # Pulldown Tab
     if ibis_data.iv_pulldown is not None:
         fig2 = plot.plot_iv_data_single(ibis_data.iv_pulldown, "Pulldown device IV data")
-        tab3 = ttk.Frame(tab_parent)
-        tab_parent.add(tab3, text="Pulldown")
-        canvas2 = FigureCanvasTkAgg(fig2, master=tab3)
-        canvas2.draw()
-        canvas2.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        toolbar2 = NavigationToolbar2Tk(canvas2, tab3)
-        toolbar2.update()
-        canvas2.get_tk_widget().pack()
+        add_check_window_plot_tab(tab_parent, fig2, "Pulldown")
 
     # Power Clamp Tab
     if ibis_data.iv_pwr_clamp is not None:
         fig3 = plot.plot_iv_data_single(ibis_data.iv_pwr_clamp, "Power clamp IV data")
-        tab4 = ttk.Frame(tab_parent)
-        tab_parent.add(tab4, text="Power Clamp")
-        tab4_lbl = tk.Label(tab4, text="Power clamp voltage data referenced to power clamp reference or voltage rail")
-        tab4_lbl.pack()
-        canvas3 = FigureCanvasTkAgg(fig3, master=tab4)
-        canvas3.draw()
-        canvas3.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        toolbar3 = NavigationToolbar2Tk(canvas3, tab4)
-        toolbar3.update()
-        canvas3.get_tk_widget().pack()
+        lbl = "Power clamp voltage data referenced to power clamp reference or voltage rail"
+        add_check_window_plot_tab(tab_parent, fig3, "Power Clamp", tab_text=lbl)
 
     # Ground Clamp Tab
     if ibis_data.iv_gnd_clamp is not None:
         fig4 = plot.plot_iv_data_single(ibis_data.iv_gnd_clamp, "Ground clamp IV data")
-        tab5 = ttk.Frame(tab_parent)
-        tab_parent.add(tab5, text="Ground Clamp")
-        canvas4 = FigureCanvasTkAgg(fig4, master=tab5)
-        canvas4.draw()
-        canvas4.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        toolbar4 = NavigationToolbar2Tk(canvas4, tab5)
-        toolbar4.update()
-        canvas4.get_tk_widget().pack()
+        add_check_window_plot_tab(tab_parent, fig4, "Ground Clamp")
 
     # Rising Waveform Tab
     if ibis_data.vt_rising:
         fig5 = plot.plot_vt_rising_waveform_data(ibis_data)
         plt.subplots_adjust(top=0.8)
-        tab6 = ttk.Frame(tab_parent)
-        tab_parent.add(tab6, text="Rising Waveforms")
-        canvas5 = FigureCanvasTkAgg(fig5, master=tab6)
-        canvas5.draw()
-        canvas5.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        toolbar5 = NavigationToolbar2Tk(canvas5, tab6)
-        toolbar5.update()
-        canvas5.get_tk_widget().pack()
+        add_check_window_plot_tab(tab_parent, fig5, "Rising Waveforms")
 
     # Falling Waveform Tab
     if ibis_data.vt_falling:
         fig6 = plot.plot_vt_falling_waveform_data(ibis_data)
         plt.subplots_adjust(top=0.8)
-        tab7 = ttk.Frame(tab_parent)
-        tab_parent.add(tab7, text="Falling Waveforms")
-        canvas6 = FigureCanvasTkAgg(fig6, master=tab7)
-        canvas6.draw()
-        canvas6.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        toolbar6 = NavigationToolbar2Tk(canvas6, tab7)
-        toolbar6.update()
-        canvas6.get_tk_widget().pack()
+        add_check_window_plot_tab(tab_parent, fig6, "Falling Waveforms")
 
     tab_parent.pack(expand=1, fill=tk.BOTH)
 
 
-def add_check_window_plot_tab(tab_parent, fig, tab_title, tab_text=""):
-    tab = ttk.Frame(tab_parent)
-    tab_parent.add(tab, text=tab_title)
-    tab_lbl = tk.Label(tab, text=tab_text)
-    tab_lbl.pack()
-    plt.subplots_adjust(top=0.8)
+def add_check_window_plot_tab(tab_parent_obj, fig, tab_title, tab_text=""):
+    tab = ttk.Frame(tab_parent_obj)
+    tab_parent_obj.add(tab, text=tab_title)
+    if tab_text != "":
+        tab_lbl = tk.Label(tab, text=tab_text)
+        tab_lbl.pack()
     canvas = FigureCanvasTkAgg(fig, master=tab)
     canvas.draw()
     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
     toolbar = NavigationToolbar2Tk(canvas, tab)
     toolbar.update()
     canvas.get_tk_widget().pack()
+
+
+def create_model_summary_table(ibis_data, tab_obj):
+    table = ttk.Treeview(tab_obj, height=4, selectmode="none")
+    table["columns"] = ("Item", "Value")
+    table.column("#0", width=0, stretch=tk.NO)
+    table.column("Item", anchor=tk.W, width=150)
+    table.column("Value", anchor=tk.W, width=400)
+    table.bind('<Motion>', 'break')  # Prevent resizing of table columns: https://stackoverflow.com/a/71710427
+
+    table.heading("Item", text="Item", anchor=tk.W)
+    table.heading("Value", text="Value", anchor=tk.W)
+
+    table.insert(parent="", index="end", iid=0, text="", values=("IBIS File", f"{ibis_data.file_name}"))
+    table.insert(parent="", index="end", iid=1, text="", values=("Component Name", f"{ibis_data.component_name}"))
+    table.insert(parent="", index="end", iid=2, text="", values=("Model Name", f"{ibis_data.model_name}"))
+    table.insert(parent="", index="end", iid=3, text="", values=("Model Type", f"{ibis_data.model_type}"))
+
+    return table
+
+
+def inset_model_parameter_row(table_obj, _id, param, symbol, data_item, multiplier, _format, units):
+    if data_item is not None:
+        table_obj.insert(parent="", index="end", iid=_id, text="",
+                         values=(param, symbol,
+                                 f"{min(data_item[1], data_item[2]) * multiplier:{_format}}",
+                                 f"{data_item[0] * multiplier:{_format}}",
+                                 f"{max(data_item[1], data_item[2]) * multiplier:{_format}}", units))
+
+
+def create_model_parameters_table(ibis_data, tab_obj):
+    table = ttk.Treeview(tab_obj, height=10, selectmode="none")
+    table["columns"] = ("Parameter", "Symbol", "Min", "Typ", "Max", "Unit")
+    table.column("#0", width=0, stretch=tk.NO)
+    table.column("Parameter", anchor=tk.W, width=150)
+    table.column("Symbol", anchor=tk.CENTER, width=100)
+    table.column("Min", anchor=tk.CENTER, width=80)
+    table.column("Typ", anchor=tk.CENTER, width=80)
+    table.column("Max", anchor=tk.CENTER, width=80)
+    table.column("Unit", anchor=tk.CENTER, width=60)
+    table.bind('<Motion>', 'break')  # Prevent resizing of table columns: https://stackoverflow.com/a/71710427
+
+    table.heading("Parameter", text="Parameter", anchor=tk.CENTER)
+    table.heading("Symbol", text="Symbol", anchor=tk.CENTER)
+    table.heading("Min", text="Min", anchor=tk.CENTER)
+    table.heading("Typ", text="Typ", anchor=tk.CENTER)
+    table.heading("Max", text="Max", anchor=tk.CENTER)
+    table.heading("Unit", text="Unit", anchor=tk.CENTER)
+
+    inset_model_parameter_row(table, 0, "Package Resistance", "r_pkg", ibis_data.r_pkg, 1e3, ".2f", u"m\u03A9")
+    inset_model_parameter_row(table, 1, "Package Inductance", "l_pkg", ibis_data.l_pkg, 1e9, ".4f", "nH")
+    inset_model_parameter_row(table, 2, "Package Capacitance", "c_pkg", ibis_data.c_pkg, 1e12, ".3f", "pF")
+    inset_model_parameter_row(table, 3, "Die Capacitance", "c_comp", ibis_data.c_comp, 1e12, ".3f", "pF")
+    table.insert(parent="", index="end", iid=4, text="", values=("", "", "", "", "", ""))  # Empty Line in the table
+
+    inset_model_parameter_row(table, 5, "Voltage Range", "v_range", ibis_data.v_range, 1, "", "V")
+    inset_model_parameter_row(table, 6, "Temperature Range", "temp_range", ibis_data.temp_range, 1, "", u"\u00B0C")
+
+    inset_model_parameter_row(table, 7, "Pullup Reference", "pullup_ref", ibis_data.pullup_ref, 1, "", "V")
+    inset_model_parameter_row(table, 8, "Pulldown Reference", "pulldown_ref", ibis_data.pulldown_ref, 1, "", "V")
+    inset_model_parameter_row(table, 9, "Power Clamp Reference", "pwr_clamp_ref", ibis_data.pwr_clamp_ref, 1, "", "V")
+    inset_model_parameter_row(table, 10, "Ground Clamp Reference", "gnd_clamp_ref", ibis_data.gnd_clamp_ref, 1, "", "V")
+
+    return table
 
 
 # Run the main main_window
