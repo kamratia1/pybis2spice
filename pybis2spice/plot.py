@@ -137,7 +137,7 @@ def plot_dual(data1, data2, data_labels, xlabel, ylabel, title1, title2):
         Parameters:
             data1 - numpy array with data organised as [x-data, y-data_1, y-data_2..., y-data_n]. Plots on Graph 1
             data2 - numpy array with data organised as [x-data, y-data_1, y-data_2..., y-data_n]. Plots on Graph 2
-            data_labels - assigns a name to each line on the graph
+            data_labels - list of strings that assigns a name to each line on the graph
             x_label - x-axis label
             y_label - y-axis label
             title1 - title of graph 1
