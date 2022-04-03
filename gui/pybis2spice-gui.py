@@ -29,7 +29,6 @@ import os
 _width = 740
 _height = 480
 logging.basicConfig(level=logging.INFO)
-beta = "(Test Version)"   # TODO - Remove this after testing is over
 
 
 # ---------------------------------------------------------------------------
@@ -66,7 +65,7 @@ def validate_io_type(ibis_data, io_type):
             if item == model_type.lower():
                 result = True
 
-    model_types_list = ["output", "i/o", "3-state"]
+    model_types_list = ["output", "i/o", "3-state", "open_drain"]
     if io_type == "Output":
         for item in model_types_list:
             if item == model_type.lower():
@@ -354,9 +353,10 @@ def check_model_window(ibis_data_model):
     data_window.grab_set()
     data_window.geometry(f"+{main_window.winfo_rootx() + 50}+{main_window.winfo_rooty() + 50}")
     data_window.iconphoto(False, _icon_img)
-    # data_window.resizable(True, True)
+    data_window.resizable(False, False)
 
     tab_parent = ttk.Notebook(data_window)
+    tab0 = ttk.Frame(tab_parent)
     tab1 = ttk.Frame(tab_parent)
     tab2 = ttk.Frame(tab_parent)
     tab3 = ttk.Frame(tab_parent)
@@ -365,7 +365,68 @@ def check_model_window(ibis_data_model):
     tab6 = ttk.Frame(tab_parent)
     tab7 = ttk.Frame(tab_parent)
 
+    # Summary Page
+    tab_parent.add(tab0, text="Summary (New)")
+
+    model_table = ttk.Treeview(tab0, height=4, selectmode="none")
+    model_table["columns"] = ("Item", "Value")
+    model_table.column("#0", width=0, stretch=tk.NO)
+    model_table.column("Item", anchor=tk.W, width=150)
+    model_table.column("Value", anchor=tk.W, width=400)
+    model_table.bind('<Motion>', 'break')  # Stop people from resizing: https://stackoverflow.com/a/71710427
+
+    model_table.heading("Item", text="Item", anchor=tk.W)
+    model_table.heading("Value", text="Value", anchor=tk.W)
+
+    model_table.insert(parent="", index="end", iid=0, text="", values=("IBIS File", f"{ibis_data_model.file}"))
+    model_table.insert(parent="", index="end", iid=1, text="", values=("Component Name", "Some Model"))
+    model_table.insert(parent="", index="end", iid=2, text="", values=("Model Name", "Some Model"))
+    model_table.insert(parent="", index="end", iid=3, text="", values=("Model Type", "I/O"))
+
+    summary_table = ttk.Treeview(tab0, height=7, selectmode="none")
+    summary_table["columns"] = ("Parameter", "Symbol", "Min", "Typ", "Max", "Unit")
+    summary_table.column("#0", width=0, stretch=tk.NO)
+    summary_table.column("Parameter", anchor=tk.CENTER, width=150)
+    summary_table.column("Symbol", anchor=tk.CENTER, width=100)
+    summary_table.column("Min", anchor=tk.CENTER, width=80)
+    summary_table.column("Typ", anchor=tk.CENTER, width=80)
+    summary_table.column("Max", anchor=tk.CENTER, width=80)
+    summary_table.column("Unit", anchor=tk.CENTER, width=60)
+    summary_table.bind('<Motion>', 'break')  # Stop people from resizing: https://stackoverflow.com/a/71710427
+
+    summary_table.heading("Parameter", text="Parameter", anchor=tk.CENTER)
+    summary_table.heading("Symbol", text="Symbol", anchor=tk.CENTER)
+    summary_table.heading("Min", text="Min", anchor=tk.CENTER)
+    summary_table.heading("Typ", text="Typ", anchor=tk.CENTER)
+    summary_table.heading("Max", text="Max", anchor=tk.CENTER)
+    summary_table.heading("Unit", text="Unit", anchor=tk.CENTER)
+
+    summary_table.insert(parent="", index="end", iid=0, text="",
+                         values=("Package Resistance", "R_pkg", "0.029", "0.030", "0.031", u"m\u03A9"))
+    summary_table.insert(parent="", index="end", iid=1, text="",
+                         values=("Package Inductance", "L_pkg", "0.029", "0.030", "0.031", "nH"))
+    summary_table.insert(parent="", index="end", iid=2, text="",
+                         values=("Package Capacitance", "C_pkg",  "0.029", "0.030", "0.031", "pF"))
+    summary_table.insert(parent="", index="end", iid=3, text="",
+                         values=("Die Capacitance", "C_comp", "0.029", "0.030", "0.031", "pF"))
+    summary_table.insert(parent="", index="end", iid=4, text="",
+                         values=("", "", "", "", "", ""))
+    summary_table.insert(parent="", index="end", iid=5, text="",
+                         values=("Voltage Range", "V_range", "3.0", "3.3", "3.6", "V"))
+    summary_table.insert(parent="", index="end", iid=6, text="",
+                         values=("Temperature Range", "Temp_range", "-40", "25", "125", u"\u00B0C"))
+
+    tab0_lbl0 = tk.Label(tab0, text="\nModel Parameters")
+    tab0_lbl0.pack()
+    model_table.pack()
+
+    tab0_lbl1 = tk.Label(tab0, text="\nModel Parameters")
+    tab0_lbl1.pack()
+    summary_table.pack()
+
+    # Remaining Tabs
     tab_parent.add(tab1, text="Summary")
+
     if ibis_data_model.iv_pullup is not None:
         tab_parent.add(tab2, text="Pullup")
     if ibis_data_model.iv_pulldown is not None:
@@ -449,7 +510,7 @@ if __name__ == '__main__':
     main_window = tk.Tk()
     main_window.geometry(f"{_width}x{_height}")
     main_window.resizable(False, False)
-    main_window.title(f" IBIS to SPICE Converter - Version {version.get_version()} {beta}")
+    main_window.title(f" IBIS to SPICE Converter - Version {version.get_version()}")
 
     # Set up the Icon
     # Using a base 64 image within a python file so that the exe build does not depend on an external icon file
@@ -528,7 +589,7 @@ if __name__ == '__main__':
     ToolTip(radio3, msg="combines the minimum (weak) I-V curves and minimum (slow) V-T waveforms", delay=0.2)
     ToolTip(radio4, msg="combines the typical I-V curves and typical V-T waveforms", delay=0.2)
     ToolTip(radio5, msg="combines the maximum (strong) I-V curves and maximum (fast) V-T waveforms", delay=0.2)
-    ToolTip(radio6, msg="creates the SPIC subcircuit files for all corners", delay=0.2)
+    ToolTip(radio6, msg="creates the SPICE subcircuit files for all corners", delay=0.2)
 
     # Radio Buttons for Selecting Input or Output Model Type
     label5 = tk.Label(master=frame3, text="I/O Type")
