@@ -20,6 +20,7 @@ from pybis2spice import version
 _TIME = 0
 _KU = 1
 _KD = 2
+_KD_OD = 1
 
 
 def generate_spice_model(io_type, subcircuit_type, ibis_data, corner, output_filepath):
@@ -256,8 +257,12 @@ def create_generic_output_model(ibis_data, corner, io_type, output_filepath):
         _INDEX = convert_corner_str_to_index(corner)
         _CORNER_INDEX = _INDEX + 1
 
-        kr = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
-        kf = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
+        if ibis_data.model_type.lower() == "open_drain":
+            kr = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
+            kf = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
+        else:
+            kr = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
+            kf = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
 
         kr = pybis2spice.compress_param(kr)
         kf = pybis2spice.compress_param(kf)
@@ -278,8 +283,11 @@ def create_generic_output_model(ibis_data, corner, io_type, output_filepath):
             file.write(device_netlist)
 
             # Calculations to define the oscillation stimulus
-            k_u_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KU], kf[:, _TIME], kf[:, _KU])
-            k_d_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KD], kf[:, _TIME], kf[:, _KD])
+            if ibis_data.model_type.lower() == "open_drain":
+                k_d_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KD_OD], kf[:, _TIME], kf[:, _KD_OD])
+            else:
+                k_u_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KU], kf[:, _TIME], kf[:, _KU])
+                k_d_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KD], kf[:, _TIME], kf[:, _KD])
 
             (offset_neg_r, offset_pos_r) = determine_crossover_offsets(kr)
             (offset_neg_f, offset_pos_f) = determine_crossover_offsets(kf)
@@ -290,7 +298,10 @@ def create_generic_output_model(ibis_data, corner, io_type, output_filepath):
 
             file.write(f'.param GAP_POS = {{if(calc_gap_pos <= 0, 0.1e-12, calc_gap_pos)}}\n')
             file.write(f'.param GAP_NEG = {{if(calc_gap_neg <= 0, 0.1e-12, calc_gap_neg)}}\n\n')
-            file.write(f'V5 Ku 0 PWL({k_u_osc_str})\n\n')
+
+            if ibis_data.model_type.lower() != "open_drain":
+                file.write(f'V5 Ku 0 PWL({k_u_osc_str})\n\n')
+
             file.write(f'V6 Kd 0 PWL({k_d_osc_str})\n\n')
 
             file.write(f'.ENDS\n')
@@ -351,8 +362,12 @@ def create_ltspice_output_model(ibis_data, corner, io_type, output_filepath):
         _INDEX = convert_corner_str_to_index(corner)
         _CORNER_INDEX = _INDEX + 1
 
-        kr = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
-        kf = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
+        if ibis_data.model_type.lower() == "open_drain":
+            kr = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
+            kf = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
+        else:
+            kr = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
+            kf = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
 
         kr = pybis2spice.compress_param(kr)
         kf = pybis2spice.compress_param(kf)
@@ -385,7 +400,7 @@ def create_ltspice_output_model(ibis_data, corner, io_type, output_filepath):
             device_netlist = define_pullup_and_pulldown_devices(ibis_data, corner)
             file.write(device_netlist)
 
-            stimulus_netlist = ltspice_stimulus_netlist_setup()
+            stimulus_netlist = ltspice_stimulus_netlist_setup() # Look at this in more detail
             file.write(stimulus_netlist)
 
             (offset_neg_r, offset_pos_r) = determine_crossover_offsets(kr)
@@ -407,27 +422,40 @@ def create_ltspice_output_model(ibis_data, corner, io_type, output_filepath):
                        f'if(stimulus > {max_stimulus}, {max_stimulus}, stimulus)}}\n\n')
 
             # Oscillation Strings
-            ku_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KU], kf[:, _TIME], kf[:, _KU])
-            kd_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KD], kf[:, _TIME], kf[:, _KD])
+            if ibis_data.model_type.lower() == "open_drain":
+                kd_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KD_OD], kf[:, _TIME], kf[:, _KD_OD])
+            else:
+                ku_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KU], kf[:, _TIME], kf[:, _KU])
+                kd_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KD], kf[:, _TIME], kf[:, _KD])
 
-            ku_inv_osc_str = create_osc_waveform_pwl(kf[:, _TIME], kf[:, _KU], kr[:, _TIME], kr[:, _KU])
-            kd_inv_osc_str = create_osc_waveform_pwl(kf[:, _TIME], kf[:, _KD], kr[:, _TIME], kr[:, _KD])
+            if ibis_data.model_type.lower() == "open_drain":
+                kd_inv_osc_str = create_osc_waveform_pwl(kf[:, _TIME], kf[:, _KD_OD], kr[:, _TIME], kr[:, _KD_OD])
+            else:
+                ku_inv_osc_str = create_osc_waveform_pwl(kf[:, _TIME], kf[:, _KU], kr[:, _TIME], kr[:, _KU])
+                kd_inv_osc_str = create_osc_waveform_pwl(kf[:, _TIME], kf[:, _KD], kr[:, _TIME], kr[:, _KD])
 
             # Rising Edge Strings
-            kur_str = create_edge_waveform_pwl(kr[:, _TIME], kr[:, _KU])
-            kdr_str = create_edge_waveform_pwl(kr[:, _TIME], kr[:, _KD])
+            if ibis_data.model_type.lower() == "open_drain":
+                kdr_str = create_edge_waveform_pwl(kr[:, _TIME], kr[:, _KD_OD])
+            else:
+                kur_str = create_edge_waveform_pwl(kr[:, _TIME], kr[:, _KU])
+                kdr_str = create_edge_waveform_pwl(kr[:, _TIME], kr[:, _KD])
 
             # Falling Edge Strings
-            kuf_str = create_edge_waveform_pwl(kf[:, _TIME], kf[:, _KU])
-            kdf_str = create_edge_waveform_pwl(kf[:, _TIME], kf[:, _KD])
+            if ibis_data.model_type.lower() == "open_drain":
+                kdf_str = create_edge_waveform_pwl(kf[:, _TIME], kf[:, _KD_OD])
+            else:
+                kuf_str = create_edge_waveform_pwl(kf[:, _TIME], kf[:, _KU])
+                kdf_str = create_edge_waveform_pwl(kf[:, _TIME], kf[:, _KD])
 
-            # Setup the K-Parameter waveforms for the Pullup transistor (Ku)
-            file.write(f"V16 K_U_OSC 0 PWL REPEAT FOREVER ({ku_osc_str}) ENDREPEAT\n")
-            file.write(f"V17 K_U_HIGH 0 1\n")
-            file.write(f"V18 K_U_LOW 0 0\n")
-            file.write(f"V19 K_U_OSC_INV 0 PWL REPEAT FOREVER ({ku_inv_osc_str}) ENDREPEAT\n")
-            file.write(f"V20 K_U_RISE 0 PWL({kur_str})\n")
-            file.write(f"V21 K_U_FALL 0 PWL({kuf_str})\n")
+            if ibis_data.model_type.lower() != "open_drain":
+                # Setup the K-Parameter waveforms for the Pullup transistor (Ku)
+                file.write(f"V16 K_U_OSC 0 PWL REPEAT FOREVER ({ku_osc_str}) ENDREPEAT\n")
+                file.write(f"V17 K_U_HIGH 0 1\n")
+                file.write(f"V18 K_U_LOW 0 0\n")
+                file.write(f"V19 K_U_OSC_INV 0 PWL REPEAT FOREVER ({ku_inv_osc_str}) ENDREPEAT\n")
+                file.write(f"V20 K_U_RISE 0 PWL({kur_str})\n")
+                file.write(f"V21 K_U_FALL 0 PWL({kuf_str})\n")
 
             # Setup the K-Parameter waveforms for the Pullup transistor (Kd)
             file.write(f"V36 K_D_OSC 0 PWL REPEAT FOREVER ({kd_osc_str}) ENDREPEAT\n")
@@ -562,7 +590,7 @@ def create_osc_waveform_pwl(t1, k1, t2, k2):
 
     str_val = str_val + f' +{{GAP_POS}} {k1[-1]} +{t2[0]} {k2[0]}'
 
-    # Second Edge Edge
+    # Second Edge
     for i in range(1, len(t2)):
         dt = t2[i] - t2[i - 1]
         str_val = str_val + f' +{dt} {k2[i]}'
@@ -581,8 +609,14 @@ def determine_crossover_offsets(k_param):
     """
 
     # crossover time point (x_t)
-    index = np.argmin(np.absolute(k_param[:, 1] - k_param[:, 2]))
-    x_t = k_param[index, 0]
+    if np.shape(k_param)[1] == 3:
+        # Find the index of the minimum value of the difference between k_u and k_d
+        index = np.argmin(np.absolute(k_param[:, 1] - k_param[:, 2]))
+        x_t = k_param[index, 0]
+    else:
+        # Find the index of the value at the halfway voltage point of the k-param waveform
+        index = np.argmin((np.max(k_param[:, 1]) - np.min(k_param[:, 1]))/2)
+        x_t = k_param[index, 0]
 
     # Time offset
     offset_neg = x_t - k_param[0][0]
