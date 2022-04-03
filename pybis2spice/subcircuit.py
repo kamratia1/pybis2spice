@@ -16,6 +16,7 @@ import numpy as np
 from pybis2spice import pybis2spice
 from pybis2spice import version
 
+
 _TIME = 0
 _KU = 1
 _KD = 2
@@ -258,6 +259,9 @@ def create_generic_output_model(ibis_data, corner, io_type, output_filepath):
         kr = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
         kf = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
 
+        kr = pybis2spice.compress_param(kr)
+        kf = pybis2spice.compress_param(kf)
+
         with open(output_filepath, 'w') as file:
             header = spice_header_info(ibis_data, corner)
             file.write(header)
@@ -350,6 +354,9 @@ def create_ltspice_output_model(ibis_data, corner, io_type, output_filepath):
         kr = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
         kf = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
 
+        kr = pybis2spice.compress_param(kr)
+        kf = pybis2spice.compress_param(kf)
+
         with open(output_filepath, 'w') as file:
 
             parameter_info = "* Note: This model may only work in LTSpice.\n"
@@ -395,6 +402,7 @@ def create_ltspice_output_model(ibis_data, corner, io_type, output_filepath):
             if ibis_data.model_type.lower() == "3-state":
                 max_stimulus = 7
 
+            # Limit the stimulus between 1 and 7
             file.write(f'.param stimulus_ = {{if(stimulus < 1, 1, '
                        f'if(stimulus > {max_stimulus}, {max_stimulus}, stimulus)}}\n\n')
 
