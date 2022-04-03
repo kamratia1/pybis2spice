@@ -90,15 +90,25 @@ def plot_vt_rising_waveform_data(ibis_data):
     left graph - Rising Waveform 1. right graph - Rising Waveform 2
     """
     if ibis_data.vt_rising:  # Check that rising waveform data is available
-        title1 = generate_vt_plot_title("Rising Waveform", ibis_data.vt_rising[0])
-        title2 = generate_vt_plot_title("Rising Waveform", ibis_data.vt_rising[1])
-        fig = plot_dual(ibis_data.vt_rising[0].data,
-                        ibis_data.vt_rising[1].data,
-                        data_labels=['Typ', 'Min', 'Max'],
-                        xlabel='Time (s)',
-                        ylabel='Voltage (V)',
-                        title1=title1,
-                        title2=title2)
+
+        if len(ibis_data.vt_rising) == 2:
+            title1 = generate_vt_plot_title("Rising Waveform", ibis_data.vt_rising[0])
+            title2 = generate_vt_plot_title("Rising Waveform", ibis_data.vt_rising[1])
+            fig = plot_dual(ibis_data.vt_rising[0].data,
+                            ibis_data.vt_rising[1].data,
+                            data_labels=['Typ', 'Min', 'Max'],
+                            xlabel='Time (s)',
+                            ylabel='Voltage (V)',
+                            title1=title1,
+                            title2=title2)
+        else:
+            title1 = generate_vt_plot_title("Rising Waveform", ibis_data.vt_rising[0])
+            fig = plot_single(ibis_data.vt_rising[0].data,
+                              data_labels=['Typ', 'Min', 'Max'],
+                              xlabel='Time (s)',
+                              ylabel='Voltage (V)',
+                              title=title1)
+
         return fig
 
 
@@ -108,15 +118,24 @@ def plot_vt_falling_waveform_data(ibis_data):
     left graph - Rising Waveform 1. right graph - Rising Waveform 2
     """
     if ibis_data.vt_falling:  # Check that falling waveform data is available
-        title1 = generate_vt_plot_title("Falling Waveform", ibis_data.vt_falling[0])
-        title2 = generate_vt_plot_title("Falling Waveform", ibis_data.vt_falling[1])
-        fig = plot_dual(ibis_data.vt_falling[0].data,
-                        ibis_data.vt_falling[1].data,
-                        data_labels=['Typ', 'Min', 'Max'],
-                        xlabel='Time (s)',
-                        ylabel='Voltage (V)',
-                        title1=title1,
-                        title2=title2)
+
+        if len(ibis_data.vt_rising) == 2:
+            title1 = generate_vt_plot_title("Falling Waveform", ibis_data.vt_falling[0])
+            title2 = generate_vt_plot_title("Falling Waveform", ibis_data.vt_falling[1])
+            fig = plot_dual(ibis_data.vt_falling[0].data,
+                            ibis_data.vt_falling[1].data,
+                            data_labels=['Typ', 'Min', 'Max'],
+                            xlabel='Time (s)',
+                            ylabel='Voltage (V)',
+                            title1=title1,
+                            title2=title2)
+        else:
+            title1 = generate_vt_plot_title("Falling Waveform", ibis_data.vt_falling[0])
+            fig = plot_single(ibis_data.vt_falling[0].data,
+                              data_labels=['Typ', 'Min', 'Max'],
+                              xlabel='Time (s)',
+                              ylabel='Voltage (V)',
+                              title=title1)
         return fig
 
 
