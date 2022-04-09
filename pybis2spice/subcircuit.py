@@ -109,26 +109,35 @@ def spice_rlc_netlist(ibis_data, corner, pin_name):
     r_pkg = ibis_data.r_pkg[_INDEX]
     st = ""
 
-    if c_pkg != 0:
-        st += f'.param C_pkg = {c_pkg}\n'
-    else:
+    if c_pkg is None:
+        st += f'.param C_pkg = {ibis_data.c_pkg[0]}\n'
+        st += f'* WARNING: The IBIS model does not have a value for the C_pkg for the {corner} corner, ' \
+              f'therefore this has been set to the typical value for C_pkg\n'
+    elif c_pkg == 0:
         st += f'.param C_pkg = 0.1e-12\n'
-        st += f'* WARNING: The IBIS model had the C_pkg set to 0. SPICE will not simulate this correctly, ' \
-              f'therefore this has been set to a nominal of 0.1pF\n'
-
-    if l_pkg != 0:
-        st += f'.param L_pkg = {l_pkg}\n'
+        st += f'* WARNING: Could not parse the C_pkg so has been set to a nominal of 0.1pF\n'
     else:
+        st += f'.param C_pkg = {c_pkg}\n'
+
+    if l_pkg is None:
+        st += f'.param L_pkg = {ibis_data.l_pkg[0]}\n'
+        st += f'* WARNING: The IBIS model does not have a value for the L_pkg for the {corner} corner, ' \
+              f'therefore this has been set to the typical value for L_pkg\n'
+    elif l_pkg == 0:
         st += f'.param L_pkg = 1e-9\n'
-        st += f'* WARNING: The IBIS model had the L_pkg set to 0. SPICE will not simulate this correctly, ' \
-              f'therefore this has been set to a nominal of 1nF\n'
-
-    if r_pkg != 0:
-        st += f'.param R_pkg = {r_pkg}\n'
+        st += f'* WARNING: Could not parse the L_pkg so has been set to a nominal of 1nF\n'
     else:
+        st += f'.param L_pkg = {l_pkg}\n'
+
+    if r_pkg is None:
+        st += f'.param R_pkg = {ibis_data.r_pkg[0]}\n'
+        st += f'* WARNING: The IBIS model does not have a value for the R_pkg for the {corner} corner, ' \
+              f'therefore this has been set to the typical value for R_pkg\n'
+    elif r_pkg == 0:
         st += f'.param R_pkg = 0.01\n'
-        st += f'* WARNING: The IBIS model had the R_pkg set to 0. SPICE will not simulate this correctly, ' \
-              f'therefore this has been set to a nominal of 0.01 Ohm\n'
+        st += f'* WARNING: Could not parse the R_pkg so has been set to a nominal of 0.01ohm\n'
+    else:
+        st += f'.param R_pkg = {r_pkg}\n'
 
     st += f'.param C_comp = {ibis_data.c_comp[_INDEX]}\n\n'
 
