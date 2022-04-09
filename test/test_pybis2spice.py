@@ -46,6 +46,14 @@ class TestPybis2Spice(unittest.TestCase):
         ibis = ecdtools.ibis.load_file(ibis_file, transform=True)
         model = ibis.get_model_by_name('TOP_MODEL_BUS_HOLD')
 
+        from decimal import Decimal
+        test = [(Decimal('2'), Decimal('0'), Decimal('0'), Decimal('0')),
+                (Decimal('1'), Decimal('0'), Decimal('0'), Decimal('0'))]
+        # Test the inversion
+        np.testing.assert_equal(pybis2spice.extract_iv_table(test),
+                                [[1, 0, 0, 0],
+                                 [2, 0, 0, 0]])
+
         np.testing.assert_equal(pybis2spice.extract_iv_table(model.pullup),
                                 [[-5.0e+00,  1.0e-04,  8.0e-05,  1.2e-04],
                                 [-1.0e+00,  3.0e-05,  2.5e-05,  4.0e-05],
@@ -186,7 +194,6 @@ class TestPybis2Spice(unittest.TestCase):
         #np.testing.assert_equal(pybis2spice.compress_param([4, 4, 3, 2, 1, 0, 0]), [4, 3, 2, 1, 0])
         #np.testing.assert_equal(pybis2spice.compress_param([4, 4, 3, 2, 1, 0, 0], threshold=1.5), [4, 4, 3, 2, 1, 0, 0])
         #np.testing.assert_equal(pybis2spice.compress_param([4.6, 4, 3, 2, 1, 0.6, 0.2], threshold=0.5), [4, 3, 2, 1, 0.6, 0.2])
-
 
 
     # TODO Test the functions for the subcircuit creation. Probably better to check the files

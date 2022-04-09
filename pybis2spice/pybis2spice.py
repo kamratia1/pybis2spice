@@ -191,7 +191,7 @@ def extract_iv_table(iv_data):
     arr = None
     if iv_data is not None:
         arr = np.asarray(iv_data, dtype='float64')
-
+        arr = arr[arr[:, 0].argsort()]  # Sort by the first column
     return arr
 
 
