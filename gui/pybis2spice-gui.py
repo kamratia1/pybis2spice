@@ -144,8 +144,11 @@ def create_subcircuit_file_callback():
     time.sleep(0.1)
     main_window.config(cursor="")
 
+    logging.info("Creating subcircuit file button pressed")
+
     _PROCEED = False
     if not(hasattr(ibis_data, 'model')):  # Check that model has been selected
+        logging.error("No model Selected. Please select a valid IBIS file and model")
         messagebox.showwarning(title="No model Selected", message="Please select a valid IBIS file and model")
 
     else:
@@ -160,6 +163,7 @@ def create_subcircuit_file_callback():
             else:
                 message += "Please select the Input I/O type"
             messagebox.showwarning(title="I/O mismatch", message=message)
+            logging.error(message)
 
         if _PROCEED:
             logging.info(f"IBIS File: {ibis_file_path}")
@@ -186,6 +190,7 @@ def create_subcircuit_file_callback():
                     _corner = "WeakSlow"
                     filename1 = f'{ibis_data.model_name}-{io_type}-{_corner}.sub'
                     filepath1 = os.path.join(file, filename1)
+                    logging.info(f"Creating subcircuit for {_corner} corner at {filepath1}")
                     ret1 = subcircuit.generate_spice_model(io_type=io_type,
                                                            subcircuit_type=subcircuit_type,
                                                            ibis_data=ibis_data,
@@ -195,6 +200,7 @@ def create_subcircuit_file_callback():
                     _corner = "Typical"
                     filename2 = f'{ibis_data.model_name}-{io_type}-{_corner}.sub'
                     filepath2 = os.path.join(file, filename2)
+                    logging.info(f"Creating subcircuit for {_corner} corner at {filepath2}")
                     ret2 = subcircuit.generate_spice_model(io_type=io_type,
                                                            subcircuit_type=subcircuit_type,
                                                            ibis_data=ibis_data,
@@ -204,6 +210,7 @@ def create_subcircuit_file_callback():
                     _corner = "FastStrong"
                     filename3 = f'{ibis_data.model_name}-{io_type}-{_corner}.sub'
                     filepath3 = os.path.join(file, filename3)
+                    logging.info(f"Creating subcircuit for {_corner} corner")
                     ret3 = subcircuit.generate_spice_model(io_type=io_type,
                                                            subcircuit_type=subcircuit_type,
                                                            ibis_data=ibis_data,
@@ -243,9 +250,11 @@ def create_subcircuit_file_callback():
                             message_success += f"{warnings}"
 
                         messagebox.showinfo(title="Success", message=message_success)
+                        logging.info(message_success)
                     else:
                         message_error = f"SPICE subcircuit model generation failed."
                         messagebox.showerror(title="Failed to create model", message=message_error)
+                        logging.error(message_error)
 
                 else:
                     logging.info(f"Chosen File: {file.name}")
@@ -277,20 +286,23 @@ def create_subcircuit_file_callback():
                             message_success += f"{warnings}"
 
                         messagebox.showinfo(title="Success", message=message_success)
+                        logging.info(message_success)
 
                     else:
                         message_error = f"SPICE subcircuit model generation failed."
                         messagebox.showerror(title="Failed to create model", message=message_error)
+                        logging.error(message_error)
 
 
 def browse_ibis_file_callback():
+
+    logging.info("Browse button pressed")
 
     file = filedialog.askopenfile(parent=main_window,
                                   title='Choose a file',
                                   filetypes=[("IBIS files", ".ibs"), ("All files", "*")])
 
     if file:
-        logging.info(file.name)
         ibis_filepath = file.name
 
         entry.config(state='normal')
@@ -305,6 +317,7 @@ def browse_ibis_file_callback():
         list_model.delete(0, tk.END)
 
         ibis_model = pybis2spice.get_ibis_model_ecdtools(ibis_filepath)
+        logging.info(f"Parsing ibis file from {ibis_filepath}")
 
         component_names = pybis2spice.list_components(ibis_model)
         for index, component in enumerate(component_names, start=1):
@@ -325,9 +338,11 @@ def browse_ibis_file_callback():
 
 
 def check_model_callback():
+    plt.close("all")  # close any previous matplotlib figures to avoid consuming excess memory
     file_path = entry.get()
     component_name = list_component.get(tk.ACTIVE)
     model_name = list_model.get(tk.ACTIVE)
+    logging.info(f"Check Model button pressed - {component_name} - {model_name}")
 
     main_window.config(cursor="wait")
 
@@ -341,6 +356,7 @@ def check_model_callback():
         check_model_window(ibis_data)
     else:
         messagebox.showinfo(title="No model Selected", message="Please select a valid IBIS file and model")
+        logging.error("No model Selected. Please select a valid IBIS file and model")
 
 
 # ---------------------------------------------------------------------------
@@ -445,11 +461,20 @@ def create_model_summary_table(ibis_data, tab_obj):
 
 def inset_model_parameter_row(table_obj, _id, param, symbol, data_item, multiplier, _format, units):
     if data_item is not None:
+
+        typical = f"{data_item[0] * multiplier:{_format}}"
+        try:
+            minimum = f"{min(data_item[1], data_item[2]) * multiplier:{_format}}"
+        except:
+            minimum = "N/A"
+
+        try:
+            maximum = f"{max(data_item[1], data_item[2]) * multiplier:{_format}}"
+        except:
+            maximum = "N/A"
+
         table_obj.insert(parent="", index="end", iid=_id, text="",
-                         values=(param, symbol,
-                                 f"{min(data_item[1], data_item[2]) * multiplier:{_format}}",
-                                 f"{data_item[0] * multiplier:{_format}}",
-                                 f"{max(data_item[1], data_item[2]) * multiplier:{_format}}", units))
+                         values=(param, symbol, minimum, typical, maximum, units))
 
 
 def create_model_parameters_table(ibis_data, tab_obj):
