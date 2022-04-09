@@ -1,0 +1,2 @@
+A jupyter notebook was initially used to develop this tool. The IBIS_to_SPICE_notebook pdf/html files are a snapshot of a first working version of the notebook intended to provide some insight into how the tool was developed.
+Please note that the information in these files may not resemble the latest source code, but the working principles should remain the same.
