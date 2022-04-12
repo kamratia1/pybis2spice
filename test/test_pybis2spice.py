@@ -185,7 +185,6 @@ class TestPybis2Spice(unittest.TestCase):
         np.testing.assert_equal(pybis2spice.differentiate([10, 10, 200, 20], [0, 1, 2, 3]), [0, 190, -180, -180])
 
     def test_compress_param(self):
-        # TODO test_compress_param
         k_param = np.asarray([[0, 0, 0], [1, 0, 0], [2, 0, 0], [3, 1, 1], [4, 2, 2], [5, 2, 2], [6, 2, 2]])
         k_compressed = np.asarray([[2, 0, 0], [3, 1, 1]])
 
@@ -196,7 +195,7 @@ class TestPybis2Spice(unittest.TestCase):
         #np.testing.assert_equal(pybis2spice.compress_param([4.6, 4, 3, 2, 1, 0.6, 0.2], threshold=0.5), [4, 3, 2, 1, 0.6, 0.2])
 
 
-    # TODO Test the functions for the subcircuit creation. Probably better to check the files
+    #  TODO Test the functions for the subcircuit creation. Probably better to check the files
 
 
 if __name__ == '__main__':

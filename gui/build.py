@@ -22,9 +22,15 @@ def create_gui_exe():
     if os.path.exists(f'pybis2spice-gui_v{version.get_version()}.exe'):
         os.remove(f'pybis2spice-gui_v{version.get_version()}.exe')
 
+    # PyInstaller.__main__.run([
+    #     'pybis2spice-gui.py',
+    #     '--noconsole',
+    #     '-iicon.ico',
+    #     '--onefile'
+    # ])
+
     PyInstaller.__main__.run([
         'pybis2spice-gui.py',
-        '--noconsole',
         '-iicon.ico',
         '--onefile'
     ])

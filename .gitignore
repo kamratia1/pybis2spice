@@ -130,9 +130,9 @@ dmypy.json
 
 pybis2spice/scratch_space.py
 .idea/*
-examples/*
 gui/build/*
 gui/dist/*
 gui/pybis2spice-gui.spec
 test/scratch.py
 gui/*.exe
+IBIS_Models-DO_NOT_REDISTRIBUTE/*
