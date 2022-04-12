@@ -8,6 +8,7 @@ A python tool that converts IBIS models to SPICE models. The ibis model types cu
 
 ## Usage
 The bin folder holds a zipped file for each released version containing a windows executable program that can be run standalone.
+
 ![](/img/gui-window.png)
 
 ### The executable program allows the user to:
@@ -15,6 +16,7 @@ The bin folder holds a zipped file for each released version containing a window
 * Select the component and the model
 * Create the SPICE subcircuit files
 * View the ibis model characteristics (I-V and Voltage-Time graphs)
+
 ![](/img/gui-check-model.png)
 
 
