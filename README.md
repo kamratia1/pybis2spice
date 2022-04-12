@@ -7,7 +7,7 @@ A python tool that converts IBIS models to SPICE models. The ibis model types cu
 * I/O
 
 ## Usage
-The gui folder contains an executable that can be run standalone.
+The bin folder holds a zipped file for each released version containing a windows executable program that can be run standalone.
 ![](/img/gui-window.png)
 
 ### The executable program allows the user to:
