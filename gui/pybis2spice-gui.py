@@ -22,7 +22,6 @@ import time
 import logging
 import webbrowser
 import urllib.request
-import base64
 import img
 import re
 import os
@@ -30,6 +29,7 @@ import os
 _width = 740
 _height = 480
 logging.basicConfig(level=logging.INFO)
+draw_circuit = False
 
 
 # ---------------------------------------------------------------------------
@@ -48,7 +48,7 @@ def check_latest_version():
     return latest_version
 
 
-def validate_io_type(ibis_data, io_type):
+def validate_type(ibis_data, io_type):
     # Check that io type selected matches the model_type
     # Returns True if it passes validation
 
@@ -58,30 +58,44 @@ def validate_io_type(ibis_data, io_type):
     except:
         pass
 
-    validate = False
-    model_types_list = ["input", "i/o"]
+    # Check if model_type is supported
+    supported = False
+    supported_model_types_list = ["input", "output", "i/o", "3-state", "open_drain", "i/o_open_drain"]
+    for item in supported_model_types_list:
+        if item == model_type.lower():
+            supported = True
+
+    io_validate = False
+    model_types_list = ["input", "i/o", "i/o_open_drain"]
     if io_type == "Input":
         for item in model_types_list:
             if item == model_type.lower():
-                validate = True
+                io_validate = True
 
-    model_types_list = ["output", "i/o", "3-state", "open_drain"]
+    model_types_list = ["output", "i/o", "3-state", "open_drain", "i/o_open_drain"]
     if io_type == "Output":
         for item in model_types_list:
             if item == model_type.lower():
-                validate = True
+                io_validate = True
 
-    if not validate:
+    if supported and not io_validate:
         message = f"I/O Select is invalid with IBIS model type.\n"
-        message += f"{ibis_data.model_name} Type: {ibis_data.model_type}\n"
+        message += f"Selected Model Type: {ibis_data.model_type}\n"
         if io_type == "Input":
             message += "Please select the Output I/O type"
-        else:
+        elif io_type == "Output":
             message += "Please select the Input I/O type"
+
         messagebox.showwarning(title="I/O mismatch", message=message)
         logging.error(message)
 
-    return validate
+    if not supported:
+        message = f"Model type \"{ibis_data.model_type}\" not supported."
+        messagebox.showwarning(title="Model type not supported", message=message)
+        logging.error(message)
+
+    ret_val = supported and io_validate
+    return ret_val
 
 
 # ---------------------------------------------------------------------------
@@ -158,7 +172,7 @@ def create_subcircuit_file_callback():
         logging.error("No model Selected. Please select a valid IBIS file and model")
         messagebox.showwarning(title="No model Selected", message="Please select a valid IBIS file and model")
     else:
-        if validate_io_type(ibis_data, io_type):
+        if validate_type(ibis_data, io_type):
             logging.info(f"IBIS File: {ibis_file_path}")
             logging.info(f"Component Selected: {component_name}")
             logging.info(f"Model Selected: {model_name}")
@@ -357,12 +371,17 @@ def check_model_window(ibis_data):
     model_parameter_table = create_model_parameters_table(ibis_data, tab1)
 
     tab0_lbl0 = tk.Label(tab1, text="\nIBIS Model Parameters")
-    tab0_lbl1 = tk.Label(tab1, text="\n")
 
     tab0_lbl0.pack()  # Heading for the Tables
     model_summary_table.pack()  # Add the Model Summary Table
-    tab0_lbl1.pack()  # Empty Line between the Tables
+    tk.Label(tab1, text="\n").pack()  # Empty Line
     model_parameter_table.pack()  # Add the Model Parameter Table
+    tk.Label(tab1, text="\n").pack()  # Empty Line
+
+    if draw_circuit:
+        circuit_canvas = tk.Canvas(tab1, bg='white', height=220, width=650)
+        create_circuit_image(ibis_data, circuit_canvas, tab1)
+        circuit_canvas.pack()
 
     # Pullup Tab
     if ibis_data.iv_pullup is not None:
@@ -413,6 +432,20 @@ def add_check_window_plot_tab(tab_parent_obj, fig, tab_title, tab_text=""):
     toolbar = NavigationToolbar2Tk(canvas, tab)
     toolbar.update()
     canvas.get_tk_widget().pack()
+
+
+def create_circuit_image(ibis_data, canvas, tab):
+    # The images need to fit within 650 x 200 px
+    if ibis_data.model_type.lower() == "input":
+        pass
+
+    elif ibis_data.model_type.lower() == "output":
+        pass
+
+    #tab.input_img = input_img = tk.PhotoImage(file=r'input.gif')
+    tab.input_img = input_img = tk.PhotoImage(data=img.get_input())
+    canvas.create_image((0, 0), image=input_img, anchor='nw')
+    canvas.create_image((200, 10), image=input_img, anchor='nw')
 
 
 def create_model_summary_table(ibis_data, tab_obj):
@@ -499,7 +532,7 @@ if __name__ == '__main__':
 
     # Set up the Icon
     # Using a base 64 image within a python file so that the exe build does not depend on an external icon file
-    _icon_data = base64.b64decode(img.get_icon())
+    # _icon_data = base64.b64decode(img.get_icon())
     _icon_img = tk.PhotoImage(data=img.get_icon())
     main_window.iconphoto(False, _icon_img)
 
