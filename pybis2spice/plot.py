@@ -76,10 +76,8 @@ def generate_vt_plot_title(waveform_type_str, waveform_obj):
 
     """
     title_str = f'{waveform_type_str}\n'
-    title_str += f'R_fixture={waveform_obj.r_fix}\n'
-    title_str += f'V_fixture typ={waveform_obj.v_fix[0]}\n'
-    title_str += f'V_fixture min={waveform_obj.v_fix[1]}\n'
-    title_str += f'V_fixture max={waveform_obj.v_fix[2]}'
+    title_str += f'R_fixture={format(waveform_obj.r_fix, ".0f")} Ω\n'
+    title_str += f'V_fixture [typ min max] = {waveform_obj.v_fix} '
 
     return title_str
 
@@ -100,14 +98,16 @@ def plot_vt_rising_waveform_data(ibis_data):
                             xlabel='Time (s)',
                             ylabel='Voltage (V)',
                             title1=title1,
-                            title2=title2)
+                            title2=title2,
+                            font_title_size=10)
         else:
             title1 = generate_vt_plot_title("Rising Waveform", ibis_data.vt_rising[0])
             fig = plot_single(ibis_data.vt_rising[0].data,
                               data_labels=['Typ', 'Min', 'Max'],
                               xlabel='Time (s)',
                               ylabel='Voltage (V)',
-                              title=title1)
+                              title=title1,
+                              font_title_size=10)
 
         return fig
 
@@ -128,14 +128,16 @@ def plot_vt_falling_waveform_data(ibis_data):
                             xlabel='Time (s)',
                             ylabel='Voltage (V)',
                             title1=title1,
-                            title2=title2)
+                            title2=title2,
+                            font_title_size=10)
         else:
             title1 = generate_vt_plot_title("Falling Waveform", ibis_data.vt_falling[0])
             fig = plot_single(ibis_data.vt_falling[0].data,
                               data_labels=['Typ', 'Min', 'Max'],
                               xlabel='Time (s)',
                               ylabel='Voltage (V)',
-                              title=title1)
+                              title=title1,
+                              font_title_size=10)
         return fig
 
 
@@ -149,7 +151,7 @@ def plot_all_ibis_data(ibis_data):
     plot_vt_falling_waveform_data(ibis_data)
 
 
-def plot_dual(data1, data2, data_labels, xlabel, ylabel, title1, title2):
+def plot_dual(data1, data2, data_labels, xlabel, ylabel, title1, title2, font_title_size=None):
     """
     Plots 2 graphs laid out horizontally with given input data (Graph 1 - Left, Graph 2 - Right)
 
@@ -182,7 +184,10 @@ def plot_dual(data1, data2, data_labels, xlabel, ylabel, title1, title2):
 
     ax1.set_xlabel(xlabel)
     ax1.set_ylabel(ylabel)
-    ax1.set_title(title1)
+    if font_title_size is None:
+        ax1.set_title(title1)
+    else:
+        ax1.set_title(title1, fontsize=font_title_size)
 
     if data2 is not None:
         num_columns = np.shape(data2)[1]
@@ -201,14 +206,17 @@ def plot_dual(data1, data2, data_labels, xlabel, ylabel, title1, title2):
 
     ax2.set_xlabel(xlabel)
     ax2.set_ylabel(ylabel)
-    ax2.set_title(title2)
+    if font_title_size is None:
+        ax2.set_title(title2)
+    else:
+        ax2.set_title(title2, fontsize=font_title_size)
 
     fig.tight_layout(w_pad=5, h_pad=2)
 
     return fig
 
 
-def plot_single(data, data_labels, xlabel, ylabel, title):
+def plot_single(data, data_labels, xlabel, ylabel, title, font_title_size=None):
     """
     Plots a graph with given input data
 
@@ -240,6 +248,9 @@ def plot_single(data, data_labels, xlabel, ylabel, title):
 
     ax1.set_xlabel(xlabel)
     ax1.set_ylabel(ylabel)
-    ax1.set_title(title)
+    if font_title_size is None:
+        ax1.set_title(title)
+    else:
+        ax1.set_title(title, fontsize=font_title_size)
 
     return fig
