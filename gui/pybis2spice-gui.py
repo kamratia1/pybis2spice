@@ -173,7 +173,8 @@ def create_subcircuit_file_callback():
     corner = radio_var2.get()
 
     main_window.config(cursor="wait")
-    ibis_data = pybis2spice.DataModel(ibis_file_path, model_name, component_name)
+    global ibis_model
+    ibis_data = pybis2spice.DataModel(ibis_model, model_name, component_name)
     main_window.update()
     time.sleep(0.01)
     main_window.config(cursor="")
