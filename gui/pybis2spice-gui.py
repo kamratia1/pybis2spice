@@ -29,7 +29,7 @@ import os
 _width = 740
 _height = 480
 logging.basicConfig(level=logging.INFO)
-draw_circuit = True
+ibis_model = None  # The ecdtools ibis_model object
 
 
 # ---------------------------------------------------------------------------
@@ -317,6 +317,7 @@ def browse_ibis_file_callback():
         list_component.delete(0, tk.END)
         list_model.delete(0, tk.END)
 
+        global ibis_model
         ibis_model = pybis2spice.get_ibis_model_ecdtools(ibis_filepath)
         logging.info(f"Parsing ibis file from {ibis_filepath}")
 
@@ -340,14 +341,14 @@ def browse_ibis_file_callback():
 
 def check_model_callback():
     plt.close("all")  # close any previous matplotlib figures to avoid consuming excess memory
-    file_path = entry.get()
     component_name = list_component.get(tk.ACTIVE)
     model_name = list_model.get(tk.ACTIVE)
     logging.info(f"Check Model button pressed - {component_name} - {model_name}")
 
     main_window.config(cursor="wait")
 
-    ibis_data = pybis2spice.DataModel(file_path, model_name, component_name)
+    global ibis_model
+    ibis_data = pybis2spice.DataModel(ibis_model, model_name, component_name)
 
     main_window.update()
     time.sleep(0.1)

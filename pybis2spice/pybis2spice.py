@@ -59,12 +59,12 @@ class DataModel(object):
     A data container for the various data tables in the ibis model
     """
 
-    def __init__(self, file_path, model_name, component_name):
+    def __init__(self, ibis_ecdtools, model_name, component_name):
         """
         Populate the attributes of the DataModel object
 
             Parameters:
-                file_path: path to the ibis file
+                ibis_ecdtools: the ecdtools object from the ecdtools.ibis.load_file() function.
                 model_name: model name as defined in ibis model
                 component_name: component name as defined in ibis model
 
@@ -80,7 +80,8 @@ class DataModel(object):
 
         try:
             # Load IBIS file. Transform=True converts numerical numbers from strings to decimal
-            ibis = ecdtools.ibis.load_file(file_path, transform=True)
+            ibis = ibis_ecdtools
+            # ecdtools.ibis.load_file(file_path, transform=True)
 
             self.file = ibis
             self.file_name = ibis.file_name
@@ -103,6 +104,8 @@ class DataModel(object):
             self.iv_pulldown = extract_iv_table(self.model.pulldown)
             self.iv_pwr_clamp = extract_iv_table(self.model.power_clamp)
             self.iv_gnd_clamp = extract_iv_table(self.model.gnd_clamp)
+
+            self.ramp = self.model.ramp
 
             self.vt_rising = [Waveform(data) for data in self.model.rising_waveforms]
             self.vt_falling = [Waveform(data) for data in self.model.falling_waveforms]
