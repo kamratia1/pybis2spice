@@ -398,35 +398,44 @@ def check_model_window(ibis_data):
         tab0_lbl1 = tk.Label(tab1, bg="red", text=f"Model Type \"{ibis_data.model_type}\" is invalid or currently unsupported")
         tab0_lbl1.pack()
 
+    # Adding markers on graphs in check model window
+    marker_state = marker_var.get()
+    if marker_state == 1:
+        marker = "."
+    else:
+        marker = ""
+
     # Pullup Tab
     if ibis_data.iv_pullup is not None:
-        fig1 = plot.plot_iv_data_single(ibis_data.iv_pullup, "Pullup device IV data")
+        fig1 = plot.plot_iv_data_single(ibis_data.iv_pullup, "Pullup device IV data", marker=marker)
         device_lbl = "\n1. Device configured to switch on pullup transistor.\n" \
-                     "2. Current through pin is measured while voltage source is swept from (-2 x VCC) to (2 x VCC)"
+                     "2. Current through pin is measured while voltage source is swept from (-VCC) to (2 x VCC)"
         add_check_window_plot_tab(ibis_data, tab_parent, fig1, "Pullup", tab_text=device_lbl)
 
     # Pulldown Tab
     if ibis_data.iv_pulldown is not None:
-        fig2 = plot.plot_iv_data_single(ibis_data.iv_pulldown, "Pulldown device IV data")
+        fig2 = plot.plot_iv_data_single(ibis_data.iv_pulldown, "Pulldown device IV data", marker=marker)
         device_lbl = "\n1. Device configured to switch on pulldown transistor.\n" \
-                     "2. Current through pin is measured while voltage source is swept from (-2 x VCC) to (2 x VCC)"
+                     "2. Current through pin is measured while voltage source is swept from (-VCC) to (2 x VCC)"
         add_check_window_plot_tab(ibis_data, tab_parent, fig2, "Pulldown", tab_text=device_lbl)
 
-    clamp_lbl = "\n1. Device transistors are switched off.\n" \
-                "2. Current through pin is measured while voltage source is swept from (-2 x VCC) to (2 x VCC)"
     # Power Clamp Tab
     if ibis_data.iv_pwr_clamp is not None:
-        fig3 = plot.plot_iv_data_single(ibis_data.iv_pwr_clamp, "Power clamp IV data")
+        fig3 = plot.plot_iv_data_single(ibis_data.iv_pwr_clamp, "Power clamp IV data", marker=marker)
+        clamp_lbl = "\n1. Device transistors are switched off.\n" \
+                    "2. Current through pin is measured while voltage source is swept from (VCC) to (2 x VCC)"
         add_check_window_plot_tab(ibis_data, tab_parent, fig3, "Power Clamp", tab_text=clamp_lbl)
 
     # Ground Clamp Tab
     if ibis_data.iv_gnd_clamp is not None:
-        fig4 = plot.plot_iv_data_single(ibis_data.iv_gnd_clamp, "Ground clamp IV data")
+        fig4 = plot.plot_iv_data_single(ibis_data.iv_gnd_clamp, "Ground clamp IV data", marker=marker)
+        clamp_lbl = "\n1. Device transistors are switched off.\n" \
+                    "2. Current through pin is measured while voltage source is swept from (-VCC) to (VCC)"
         add_check_window_plot_tab(ibis_data, tab_parent, fig4, "Ground Clamp", tab_text=clamp_lbl)
 
     # Rising Waveform Tab
     if ibis_data.vt_rising:
-        fig5 = plot.plot_vt_rising_waveform_data(ibis_data)
+        fig5 = plot.plot_vt_rising_waveform_data(ibis_data, marker=marker)
         plt.subplots_adjust(top=0.86, wspace=0.3)
         rising_waveform_lbl = "\n1. Device transistors configured to switch output from low to high.\n" \
                               "2. Voltage at the pin is measured with respect to time."
@@ -434,7 +443,7 @@ def check_model_window(ibis_data):
 
     # Falling Waveform Tab
     if ibis_data.vt_falling:
-        fig6 = plot.plot_vt_falling_waveform_data(ibis_data)
+        fig6 = plot.plot_vt_falling_waveform_data(ibis_data, marker=marker)
         plt.subplots_adjust(top=0.86, wspace=0.3)
         falling_waveform_lbl = "\n1. Device transistors configured to switch output from high to low.\n" \
                                "2. Voltage at the pin is measured with respect to time."
@@ -477,58 +486,58 @@ def create_circuit_setup_image(ibis_data, tab_title, canvas, tab):
     device_xpos = x_offset
     clamp_xpos = x_offset + 55
     setup_xpos = x_offset + 130
-    up_ypos = 3
-    down_ypos = 100
-    setup_ypos = 53
-    vt_fixture_ypos = 35
-
-    if tab_title == "Pullup":
-        canvas.create_image((device_xpos, up_ypos), image=pullup_device, anchor='nw')
-        if ibis_data.iv_pwr_clamp is not None:
-            canvas.create_image((clamp_xpos, up_ypos), image=pwr_clamp, anchor='nw')
-        if ibis_data.iv_gnd_clamp is not None:
-            canvas.create_image((clamp_xpos, down_ypos), image=gnd_clamp, anchor='nw')
-        canvas.create_image((setup_xpos, setup_ypos), image=pullup_iv_setup, anchor='nw')
-        canvas.create_image((device_xpos + 31, setup_ypos + 54), image=net_segment, anchor='nw')
-        canvas.create_image((clamp_xpos + 25, setup_ypos + 54), image=net_segment, anchor='nw')
+    up_ypos = 0
+    down_ypos = 100 + 5
+    setup_ypos = 52
+    vt_fixture_ypos = 34
 
     if tab_title == "Pulldown":
         canvas.create_image((device_xpos, down_ypos), image=pulldown_device, anchor='nw')
         canvas.create_image((setup_xpos, setup_ypos), image=pulldown_iv_setup, anchor='nw')
         if ibis_data.iv_pwr_clamp is not None:
-            canvas.create_image((clamp_xpos, up_ypos), image=pwr_clamp, anchor='nw')
+            canvas.create_image((clamp_xpos-1, up_ypos), image=pwr_clamp, anchor='nw')
         if ibis_data.iv_gnd_clamp is not None:
             canvas.create_image((clamp_xpos, down_ypos), image=gnd_clamp, anchor='nw')
-        canvas.create_image((device_xpos + 31, setup_ypos + 54), image=net_segment, anchor='nw')
+        canvas.create_image((device_xpos + 33, setup_ypos + 54), image=net_segment, anchor='nw')
         canvas.create_image((clamp_xpos + 25, setup_ypos + 54), image=net_segment, anchor='nw')
 
-    if tab_title == "Power Clamp":
-        canvas.create_image((clamp_xpos, up_ypos), image=pwr_clamp, anchor='nw')
+    if tab_title == "Pullup":
+        canvas.create_image((device_xpos, up_ypos), image=pullup_device, anchor='nw')
+        if ibis_data.iv_pwr_clamp is not None:
+            canvas.create_image((clamp_xpos-1, up_ypos), image=pwr_clamp, anchor='nw')
         if ibis_data.iv_gnd_clamp is not None:
             canvas.create_image((clamp_xpos, down_ypos), image=gnd_clamp, anchor='nw')
         canvas.create_image((setup_xpos, setup_ypos), image=pullup_iv_setup, anchor='nw')
-        canvas.create_image((device_xpos + 31, setup_ypos + 54), image=net_segment, anchor='nw')
+        canvas.create_image((device_xpos + 33, setup_ypos + 54), image=net_segment, anchor='nw')
+        canvas.create_image((clamp_xpos + 25, setup_ypos + 54), image=net_segment, anchor='nw')
+
+    if tab_title == "Power Clamp":
+        canvas.create_image((clamp_xpos-1, up_ypos), image=pwr_clamp, anchor='nw')
+        if ibis_data.iv_gnd_clamp is not None:
+            canvas.create_image((clamp_xpos, down_ypos), image=gnd_clamp, anchor='nw')
+        canvas.create_image((setup_xpos, setup_ypos), image=pullup_iv_setup, anchor='nw')
+        canvas.create_image((device_xpos + 33, setup_ypos + 54), image=net_segment, anchor='nw')
         canvas.create_image((clamp_xpos + 25, setup_ypos + 54), image=net_segment, anchor='nw')
 
     if tab_title == "Ground Clamp":
         if ibis_data.iv_pwr_clamp is not None:
-            canvas.create_image((clamp_xpos, up_ypos), image=pwr_clamp, anchor='nw')
+            canvas.create_image((clamp_xpos-1, up_ypos), image=pwr_clamp, anchor='nw')
         canvas.create_image((clamp_xpos, down_ypos), image=gnd_clamp, anchor='nw')
         canvas.create_image((setup_xpos, setup_ypos), image=pulldown_iv_setup, anchor='nw')
-        canvas.create_image((device_xpos + 31, setup_ypos + 54), image=net_segment, anchor='nw')
+        canvas.create_image((device_xpos + 33, setup_ypos + 54), image=net_segment, anchor='nw')
         canvas.create_image((clamp_xpos + 25, setup_ypos + 54), image=net_segment, anchor='nw')
 
     if tab_title == "Rising Waveforms" or tab_title == "Falling Waveforms":
         if ibis_data.iv_pullup is not None:
-            canvas.create_image((device_xpos, up_ypos), image=pullup_device, anchor='nw')
+            canvas.create_image((device_xpos+1, up_ypos), image=pullup_device, anchor='nw')
         if ibis_data.iv_pulldown is not None:
             canvas.create_image((device_xpos, down_ypos), image=pulldown_device, anchor='nw')
         if ibis_data.iv_pwr_clamp is not None:
-            canvas.create_image((clamp_xpos, up_ypos), image=pwr_clamp, anchor='nw')
+            canvas.create_image((clamp_xpos-1, up_ypos), image=pwr_clamp, anchor='nw')
         if ibis_data.iv_gnd_clamp is not None:
             canvas.create_image((clamp_xpos, down_ypos), image=gnd_clamp, anchor='nw')
         canvas.create_image((setup_xpos, vt_fixture_ypos), image=vt_fixture, anchor='nw')
-        canvas.create_image((device_xpos + 31, setup_ypos + 54), image=net_segment, anchor='nw')
+        canvas.create_image((device_xpos + 33, setup_ypos + 54), image=net_segment, anchor='nw')
         canvas.create_image((clamp_xpos + 25, setup_ypos + 54), image=net_segment, anchor='nw')
 
 
@@ -708,6 +717,12 @@ if __name__ == '__main__':
     btn2 = tk.Button(master=frame2, text="Check Model", command=check_model_callback)
     btn2.place(x=10, y=205)
     ToolTip(btn2, msg="view the I-V and Voltage-Time characteristic graphs of the model", delay=0.2)
+
+    marker_var = tk.IntVar()
+    marker_check = tk.Checkbutton(master=frame2, text="Enable marker", variable=marker_var)
+    marker_check.select()
+    marker_check.place(x=110, y=205)
+    ToolTip(marker_check, msg="Place data point markers on the graphs within the check model window", delay=0.2)
 
     # ---------------------------------------------------------------------------
     # Frame 3: SPICE subcircuit options
