@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_iv_data_single(data, title):
+def plot_iv_data_single(data, title, marker=None):
     """
     Plots the data in a single figure
 
@@ -26,12 +26,14 @@ def plot_iv_data_single(data, title):
                       data_labels=['Typ', 'Min', 'Max'],
                       xlabel='Voltage (V)',
                       ylabel='Current (A)',
-                      title=title)
+                      title=title,
+                      font_title_size=10,
+                      marker=marker)
 
     return fig
 
 
-def plot_iv_device_data(ibis_data):
+def plot_iv_device_data(ibis_data, marker=None):
     """
     takes the ibis_data DataModel object and plots the iv device data in 2 graphs laid out horizontally.
     left graph - Pull up device IV curve. right graph - Pull down device IV curve
@@ -44,11 +46,13 @@ def plot_iv_device_data(ibis_data):
                     xlabel='Voltage (V)',
                     ylabel='Current (A)',
                     title1='Pullup IV',
-                    title2='Pulldown IV')
+                    title2='Pulldown IV',
+                    font_title_size=10,
+                    marker=marker)
     return fig
 
 
-def plot_iv_clamp_data(ibis_data):
+def plot_iv_clamp_data(ibis_data, marker=None):
     """
     takes the ibis_data DataModel object and plots the clamp data in 2 graphs laid out horizontally
     left graph - Power Clamp IV curve. right graph - Ground Clamp IV curve
@@ -59,7 +63,9 @@ def plot_iv_clamp_data(ibis_data):
                     xlabel='Voltage (V)',
                     ylabel='Current (A)',
                     title1='Power Clamp IV',
-                    title2='Ground Clamp IV')
+                    title2='Ground Clamp IV',
+                    font_title_size=10,
+                    marker=marker)
     return fig
 
 
@@ -82,7 +88,7 @@ def generate_vt_plot_title(waveform_type_str, waveform_obj):
     return title_str
 
 
-def plot_vt_rising_waveform_data(ibis_data):
+def plot_vt_rising_waveform_data(ibis_data, marker=None):
     """
     takes the ibis_data DataModel object and plots the rising waveform data in 2 graphs laid out horizontally
     left graph - Rising Waveform 1. right graph - Rising Waveform 2
@@ -99,7 +105,8 @@ def plot_vt_rising_waveform_data(ibis_data):
                             ylabel='Voltage (V)',
                             title1=title1,
                             title2=title2,
-                            font_title_size=10)
+                            font_title_size=10,
+                            marker=marker)
         else:
             title1 = generate_vt_plot_title("Rising Waveform", ibis_data.vt_rising[0])
             fig = plot_single(ibis_data.vt_rising[0].data,
@@ -107,12 +114,13 @@ def plot_vt_rising_waveform_data(ibis_data):
                               xlabel='Time (s)',
                               ylabel='Voltage (V)',
                               title=title1,
-                              font_title_size=10)
+                              font_title_size=10,
+                              marker=marker)
 
         return fig
 
 
-def plot_vt_falling_waveform_data(ibis_data):
+def plot_vt_falling_waveform_data(ibis_data, marker=None):
     """
     takes the ibis_data DataModel object and plots the falling waveform data in 2 graphs laid out horizontally
     left graph - Rising Waveform 1. right graph - Rising Waveform 2
@@ -129,7 +137,8 @@ def plot_vt_falling_waveform_data(ibis_data):
                             ylabel='Voltage (V)',
                             title1=title1,
                             title2=title2,
-                            font_title_size=10)
+                            font_title_size=10,
+                            marker=marker)
         else:
             title1 = generate_vt_plot_title("Falling Waveform", ibis_data.vt_falling[0])
             fig = plot_single(ibis_data.vt_falling[0].data,
@@ -137,7 +146,8 @@ def plot_vt_falling_waveform_data(ibis_data):
                               xlabel='Time (s)',
                               ylabel='Voltage (V)',
                               title=title1,
-                              font_title_size=10)
+                              font_title_size=10,
+                              marker=marker)
         return fig
 
 
@@ -151,7 +161,7 @@ def plot_all_ibis_data(ibis_data):
     plot_vt_falling_waveform_data(ibis_data)
 
 
-def plot_dual(data1, data2, data_labels, xlabel, ylabel, title1, title2, font_title_size=None):
+def plot_dual(data1, data2, data_labels, xlabel, ylabel, title1, title2, font_title_size=None, marker=None):
     """
     Plots 2 graphs laid out horizontally with given input data (Graph 1 - Left, Graph 2 - Right)
 
@@ -163,7 +173,6 @@ def plot_dual(data1, data2, data_labels, xlabel, ylabel, title1, title2, font_ti
             y_label - y-axis label
             title1 - title of graph 1
             title1 - title of graph 2
-
     """
     fig, (ax1, ax2) = plt.subplots(1, 2)
 
@@ -176,7 +185,10 @@ def plot_dual(data1, data2, data_labels, xlabel, ylabel, title1, title2, font_ti
             x = data1[:, 0][not_nan]
             y = data1[:, i][not_nan]
 
-            ax1.plot(x, y, label=data_labels[i - 1])
+            if marker is None:
+                ax1.plot(x, y, label=data_labels[i - 1])
+            else:
+                ax1.plot(x, y, label=data_labels[i - 1], marker=marker)
 
         ax1.legend()
         ax1.grid(color='0.9')
@@ -198,7 +210,10 @@ def plot_dual(data1, data2, data_labels, xlabel, ylabel, title1, title2, font_ti
             x = data2[:, 0][not_nan]
             y = data2[:, i][not_nan]
 
-            ax2.plot(x, y, label=data_labels[i - 1])
+            if marker is None:
+                ax2.plot(x, y, label=data_labels[i - 1])
+            else:
+                ax2.plot(x, y, label=data_labels[i - 1], marker=marker)
 
         ax2.legend()
         ax2.grid(color='0.9')
@@ -216,7 +231,7 @@ def plot_dual(data1, data2, data_labels, xlabel, ylabel, title1, title2, font_ti
     return fig
 
 
-def plot_single(data, data_labels, xlabel, ylabel, title, font_title_size=None):
+def plot_single(data, data_labels, xlabel, ylabel, title, font_title_size=None, marker=None):
     """
     Plots a graph with given input data
 
@@ -240,7 +255,10 @@ def plot_single(data, data_labels, xlabel, ylabel, title, font_title_size=None):
             x = data[:, 0][not_nan]
             y = data[:, i][not_nan]
 
-            ax1.plot(x, y, label=data_labels[i - 1])
+            if marker is None:
+                ax1.plot(x, y, label=data_labels[i - 1])
+            else:
+                ax1.plot(x, y, label=data_labels[i - 1], marker=marker)
 
         ax1.legend()
         ax1.grid(color='0.9')
