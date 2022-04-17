@@ -149,8 +149,7 @@ def help_message_callback():
     lbl_message2.pack(side=tk.TOP)
     link2.pack(side=tk.TOP)
 
-    # latest_version = check_latest_version()
-    latest_version = '0.2'  # TODO - For Testing
+    latest_version = check_latest_version()
     latest_version_float = float(latest_version)
     current_version_float = float(version.get_version())
 

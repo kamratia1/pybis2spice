@@ -105,7 +105,7 @@ class DataModel(object):
             self.iv_pwr_clamp = extract_iv_table(self.model.power_clamp)
             self.iv_gnd_clamp = extract_iv_table(self.model.gnd_clamp)
 
-            self.ramp = self.model.ramp
+            self.ramp = self.model.ramp  # TODO - Create a function to extract the ramp parameters
 
             self.vt_rising = [Waveform(data) for data in self.model.rising_waveforms]
             self.vt_falling = [Waveform(data) for data in self.model.falling_waveforms]

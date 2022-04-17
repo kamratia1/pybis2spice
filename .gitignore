@@ -139,3 +139,4 @@ IBIS_Models-DO_NOT_REDISTRIBUTE/*
 *.docx
 bin/pybis2spice-v0.1
 bin/pybis2spice-v1.0
+bin/pybis2spice-v1.1
