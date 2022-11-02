@@ -33,6 +33,25 @@ def plot_iv_data_single(data, title, marker=None):
     return fig
 
 
+def plot_rv_data_single(data, title, marker=None):
+    """
+    Plots the resistance-voltage data in a single figure
+
+    Parameters:
+        data: numpy array with data organised as [x-data, y-data_1, y-data_2..., y-data_n]
+        title: Plot title
+    """
+    fig = plot_single(data,
+                      data_labels=['Typ', 'Min v_range - Weak', 'Max v_range - Strong'],
+                      xlabel='Voltage across device (V)',
+                      ylabel='Resistance of Device (Ω)',
+                      title=title,
+                      font_title_size=10,
+                      marker=marker)
+
+    return fig
+
+
 def plot_iv_device_data(ibis_data, marker=None):
     """
     takes the ibis_data DataModel object and plots the iv device data in 2 graphs laid out horizontally.
