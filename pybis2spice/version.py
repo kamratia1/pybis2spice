@@ -1,7 +1,7 @@
 
 # This version is for both the GUI and the main pybis2spice module
-__version__ = '1.2 (Unstable Test branch)'
-__date__ = '02 Nov 2022'
+__version__ = '1.2'
+__date__ = '26 Nov 2022'
 
 import os
 
