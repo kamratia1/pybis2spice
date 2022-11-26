@@ -18,6 +18,7 @@ from tkinter import messagebox
 from tkinter import filedialog
 from tktooltip import ToolTip
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+import numpy as np
 import time
 import logging
 import webbrowser
@@ -410,28 +411,28 @@ def check_model_window(ibis_data):
     if ibis_data.iv_pullup is not None:
         fig1 = plot.plot_iv_data_single(ibis_data.iv_pullup, "Pullup device IV data", marker=marker)
         device_lbl = "\n1. Device configured to switch on pullup transistor.\n" \
-                     "2. Current through pin is measured while voltage source is swept from (-VCC) to (2 x VCC)"
+                     "2. Current through pin is measured while voltage across device is swept from (-VCC) to (2 x VCC)"
         add_check_window_plot_tab(ibis_data, tab_parent, fig1, "Pullup", tab_text=device_lbl)
 
     # Pulldown Tab
     if ibis_data.iv_pulldown is not None:
         fig2 = plot.plot_iv_data_single(ibis_data.iv_pulldown, "Pulldown device IV data", marker=marker)
         device_lbl = "\n1. Device configured to switch on pulldown transistor.\n" \
-                     "2. Current through pin is measured while voltage source is swept from (-VCC) to (2 x VCC)"
+                     "2. Current through pin is measured while voltage across device is swept from (-VCC) to (2 x VCC)"
         add_check_window_plot_tab(ibis_data, tab_parent, fig2, "Pulldown", tab_text=device_lbl)
 
     # Power Clamp Tab
     if ibis_data.iv_pwr_clamp is not None:
         fig3 = plot.plot_iv_data_single(ibis_data.iv_pwr_clamp, "Power clamp IV data", marker=marker)
         clamp_lbl = "\n1. Device transistors are switched off.\n" \
-                    "2. Current through pin is measured while voltage source is swept from (VCC) to (2 x VCC)"
+                    "2. Current through pin is measured while voltage across clamp is swept from (VCC) to (2 x VCC)"
         add_check_window_plot_tab(ibis_data, tab_parent, fig3, "Power Clamp", tab_text=clamp_lbl)
 
     # Ground Clamp Tab
     if ibis_data.iv_gnd_clamp is not None:
         fig4 = plot.plot_iv_data_single(ibis_data.iv_gnd_clamp, "Ground clamp IV data", marker=marker)
         clamp_lbl = "\n1. Device transistors are switched off.\n" \
-                    "2. Current through pin is measured while voltage source is swept from (-VCC) to (VCC)"
+                    "2. Current through pin is measured while voltage across clamp is swept from (-VCC) to (VCC)"
         add_check_window_plot_tab(ibis_data, tab_parent, fig4, "Ground Clamp", tab_text=clamp_lbl)
 
     # Rising Waveform Tab
@@ -449,6 +450,44 @@ def check_model_window(ibis_data):
         falling_waveform_lbl = "\n1. Device transistors configured to switch output from high to low.\n" \
                                "2. Voltage at the pin is measured with respect to time."
         add_check_window_plot_tab(ibis_data, tab_parent, fig6, "Falling Waveforms", tab_text=falling_waveform_lbl)
+
+    # Pullup Transistor Resistance-Voltage Curve
+    if ibis_data.iv_pullup is not None:
+        array_size = np.shape(ibis_data.iv_pullup[:, 0])[0]  # Get length of the table data
+        rv_array = np.zeros([array_size, 4])  # Create empty array
+        rv_array[:, 0] = ibis_data.iv_pullup[:, 0]
+
+        # Divide Voltage by current to get resistance
+        rv_array[:, 1] = np.absolute(ibis_data.iv_pullup[:, 0] / ibis_data.iv_pullup[:, 1])   # Typical
+        rv_array[:, 2] = np.absolute(ibis_data.iv_pullup[:, 0] / ibis_data.iv_pullup[:, 2])  # min
+        rv_array[:, 3] = np.absolute(ibis_data.iv_pullup[:, 0] / ibis_data.iv_pullup[:, 3])  # max
+
+        # Remove values outside the 0 - VCC range
+        rv_array = rv_array[(np.logical_and(rv_array[:, 0] >= 0, rv_array[:, 0] <= ibis_data.v_range[0]))]
+
+        fig7 = plot.plot_rv_data_single(rv_array, "Pullup device Resistance-Voltage data", marker=marker)
+        device_lbl = "\n1. Device configured to switch on pullup transistor.\n" \
+                     "2. Resistance of device is measured while voltage across device is swept from 0 to VCC"
+        add_check_window_plot_tab(ibis_data, tab_parent, fig7, "Pullup Resistance", tab_text=device_lbl)
+
+    # Pulldown Transistor Resistance-Voltage Curve
+    if ibis_data.iv_pulldown is not None:
+        array_size = np.shape(ibis_data.iv_pulldown[:, 0])[0]  # Get length of the table data
+        rv_array = np.zeros([array_size, 4])  # Create empty array
+        rv_array[:, 0] = ibis_data.iv_pulldown[:, 0]
+
+        # Divide Voltage by current to get resistance
+        rv_array[:, 1] = np.absolute(ibis_data.iv_pulldown[:, 0] / ibis_data.iv_pulldown[:, 1])  # Typical
+        rv_array[:, 2] = np.absolute(ibis_data.iv_pulldown[:, 0] / ibis_data.iv_pulldown[:, 2])  # min
+        rv_array[:, 3] = np.absolute(ibis_data.iv_pulldown[:, 0] / ibis_data.iv_pulldown[:, 3])  # max
+
+        # Remove values outside the 0 - VCC range
+        rv_array = rv_array[(np.logical_and(rv_array[:, 0] >= 0, rv_array[:, 0] <= ibis_data.v_range[0]))]
+
+        fig8 = plot.plot_rv_data_single(rv_array, "Pulldown device Resistance-Voltage data", marker=marker)
+        device_lbl = "\n1. Device configured to switch on pulldown transistor.\n" \
+                     "2. Resistance of device is measured while voltage across device is swept from 0 to VCC"
+        add_check_window_plot_tab(ibis_data, tab_parent, fig8, "Pulldown Resistance", tab_text=device_lbl)
 
     tab_parent.pack(expand=1, fill=tk.BOTH)
 
@@ -492,7 +531,7 @@ def create_circuit_setup_image(ibis_data, tab_title, canvas, tab):
     setup_ypos = 52
     vt_fixture_ypos = 34
 
-    if tab_title == "Pulldown":
+    if tab_title == "Pulldown" or tab_title == "Pulldown Resistance":
         canvas.create_image((device_xpos, down_ypos), image=pulldown_device, anchor='nw')
         canvas.create_image((setup_xpos, setup_ypos), image=pulldown_iv_setup, anchor='nw')
         if ibis_data.iv_pwr_clamp is not None:
@@ -502,7 +541,7 @@ def create_circuit_setup_image(ibis_data, tab_title, canvas, tab):
         canvas.create_image((device_xpos + 33, setup_ypos + 54), image=net_segment, anchor='nw')
         canvas.create_image((clamp_xpos + 25, setup_ypos + 54), image=net_segment, anchor='nw')
 
-    if tab_title == "Pullup":
+    if tab_title == "Pullup" or tab_title == "Pullup Resistance":
         canvas.create_image((device_xpos, up_ypos), image=pullup_device, anchor='nw')
         if ibis_data.iv_pwr_clamp is not None:
             canvas.create_image((clamp_xpos-1, up_ypos), image=pwr_clamp, anchor='nw')
