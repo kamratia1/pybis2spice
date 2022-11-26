@@ -26,16 +26,23 @@ import urllib.request
 import img
 import re
 import os
+import platform
 
-_width = 740
-_height = 480
 logging.basicConfig(level=logging.INFO)
 ibis_model = None  # The ecdtools ibis_model object
-
 
 # ---------------------------------------------------------------------------
 # Helper Functions
 # ---------------------------------------------------------------------------
+def check_platform():
+    system = "Windows"
+    if platform.system() == "Darwin":
+        system = "Mac"
+    if platform.system() == "Linux":
+        system = "Linux"
+
+    return system
+
 def check_latest_version():
     latest_version = version.get_version()
 
@@ -136,13 +143,13 @@ def help_message_callback():
 
     url1 = "https://github.com/kamratia1/pybis2spice/issues/"
     lbl_message1 = tk.Label(help_window, text=f"{message1}")
-    link1 = tk.Label(help_window, text=url1, fg='#0000EE')
+    link1 = tk.Label(help_window, text=url1)
     link1.bind("<Button-1>", lambda e: help_url_callback(url1))
 
     message2 = "Help on how to use this tool can be found within the README at "
     url2 = "https://github.com/kamratia1/pybis2spice/"
     lbl_message2 = tk.Label(help_window, text=f"\n\n{message2}")
-    link2 = tk.Label(help_window, text=url2, fg='#0000EE')
+    link2 = tk.Label(help_window, text=url2)
     link2.bind("<Button-1>", lambda e: help_url_callback(url2))
 
     lbl_message1.pack(side=tk.TOP)
@@ -370,7 +377,9 @@ def check_model_window(ibis_data):
     data_window = tk.Toplevel(main_window)
     data_window.geometry(f"+{main_window.winfo_rootx() + 50}+{main_window.winfo_rooty() + 50}")
     data_window.title(f"Check IBIS Model - {ibis_data.model_name}")
+
     data_window.minsize(700, 700)
+
     data_window.grab_set()
     data_window.iconphoto(False, _icon_img)
     data_window.resizable(False, False)
@@ -463,7 +472,8 @@ def check_model_window(ibis_data):
         rv_array[:, 3] = np.absolute(ibis_data.iv_pullup[:, 0] / ibis_data.iv_pullup[:, 3])  # max
 
         # Remove values outside the 0 - VCC range
-        rv_array = rv_array[(np.logical_and(rv_array[:, 0] >= 0, rv_array[:, 0] <= ibis_data.v_range[0]))]
+        vcc = pybis2spice.get_reference(ibis_data.pullup_ref, ibis_data.v_range, 3)
+        rv_array = rv_array[(np.logical_and(rv_array[:, 0] >= 0, rv_array[:, 0] <= vcc))]
 
         fig7 = plot.plot_rv_data_single(rv_array, "Pullup device Resistance-Voltage data", marker=marker)
         device_lbl = "\n1. Device configured to switch on pullup transistor.\n" \
@@ -482,7 +492,8 @@ def check_model_window(ibis_data):
         rv_array[:, 3] = np.absolute(ibis_data.iv_pulldown[:, 0] / ibis_data.iv_pulldown[:, 3])  # max
 
         # Remove values outside the 0 - VCC range
-        rv_array = rv_array[(np.logical_and(rv_array[:, 0] >= 0, rv_array[:, 0] <= ibis_data.v_range[0]))]
+        vcc = pybis2spice.get_reference(ibis_data.pullup_ref, ibis_data.v_range, 3)
+        rv_array = rv_array[(np.logical_and(rv_array[:, 0] >= 0, rv_array[:, 0] <= vcc))]
 
         fig8 = plot.plot_rv_data_single(rv_array, "Pulldown device Resistance-Voltage data", marker=marker)
         device_lbl = "\n1. Device configured to switch on pulldown transistor.\n" \
@@ -672,10 +683,10 @@ def inset_model_parameter_row(table_obj, _id, param, symbol, data_item, multipli
 
 
 def create_model_parameters_table(ibis_data, tab_obj):
-    table = ttk.Treeview(tab_obj, height=10, selectmode="none")
+    table = ttk.Treeview(tab_obj, height=11, selectmode="none")
     table["columns"] = ("Parameter", "Symbol", "Min", "Typ", "Max", "Unit")
     table.column("#0", width=0, stretch=tk.NO)
-    table.column("Parameter", anchor=tk.W, width=150)
+    table.column("Parameter", anchor=tk.W, width=170)
     table.column("Symbol", anchor=tk.CENTER, width=100)
     table.column("Min", anchor=tk.CENTER, width=80)
     table.column("Typ", anchor=tk.CENTER, width=80)
@@ -710,6 +721,13 @@ def create_model_parameters_table(ibis_data, tab_obj):
 # Run the main main_window
 if __name__ == '__main__':
 
+    _width = 740
+    _height = 480
+
+    if check_platform() == "Mac":
+        _width = 900
+
+
     # Main Window Top Level Config
     main_window = tk.Tk()
     main_window.geometry(f"{_width}x{_height}")
@@ -730,7 +748,10 @@ if __name__ == '__main__':
     label1 = tk.Label(master=frame1, text="IBIS File Select", padx=10)
     label1.pack(side=tk.LEFT)
 
-    entry = tk.Entry(master=frame1, width=80)
+    entry_size = 80
+    if check_platform() == "Mac":
+        entry_size = 70
+    entry = tk.Entry(master=frame1, width=entry_size)
     entry.pack(side=tk.LEFT)
     entry.config(state='disabled')
 
@@ -755,13 +776,21 @@ if __name__ == '__main__':
     list_model.place(x=_width / 2, y=35)
 
     btn2 = tk.Button(master=frame2, text="Check Model", command=check_model_callback)
-    btn2.place(x=10, y=205)
+    btn2_ypos = 205
+    if check_platform() == "Mac":
+        btn2_ypos = 208
+    btn2.place(x=10, y=btn2_ypos)
     ToolTip(btn2, msg="view the I-V and Voltage-Time characteristic graphs of the model", delay=0.2)
 
     marker_var = tk.IntVar()
     marker_check = tk.Checkbutton(master=frame2, text="Enable marker", variable=marker_var)
     marker_check.select()
-    marker_check.place(x=110, y=205)
+    marker_var_xpos = 110
+    marker_var_ypos = 205
+    if check_platform() == "Mac":
+        marker_var_xpos = 130
+        marker_var_ypos = 210
+    marker_check.place(x=marker_var_xpos, y=marker_var_ypos)
     ToolTip(marker_check, msg="Place data point markers on the graphs within the check model window", delay=0.2)
 
     # ---------------------------------------------------------------------------
@@ -820,7 +849,10 @@ if __name__ == '__main__':
     btn3 = tk.Button(master=frame3, text="Help", command=help_message_callback)
     btn3.place(x=10, y=110)
 
+    btn4_xpos = 50
+    if check_platform() == "Mac":
+        btn4_xpos = 80
     btn4 = tk.Button(master=frame3, text="Create SPICE Subcircuit", command=create_subcircuit_file_callback)
-    btn4.place(x=50, y=110)
+    btn4.place(x=btn4_xpos, y=110)
 
     main_window.mainloop()
