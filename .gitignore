@@ -141,6 +141,6 @@ bin/pybis2spice-v0.1
 bin/pybis2spice-v1.0
 bin/pybis2spice-v1.1
 bin/pybis2spice-v1.2-mac
-bin/pybis2spice-v1.2
+bin/pybis2spice-v1.2-win
 gui/.DS_store
 bin/.DS_store

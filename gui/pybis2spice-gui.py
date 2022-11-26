@@ -849,7 +849,7 @@ if __name__ == '__main__':
     btn3 = tk.Button(master=frame3, text="Help", command=help_message_callback)
     btn3.place(x=10, y=110)
 
-    bt4_xpos = 50
+    btn4_xpos = 50
     if check_platform() == "Mac":
         btn4_xpos = 80
     btn4 = tk.Button(master=frame3, text="Create SPICE Subcircuit", command=create_subcircuit_file_callback)
