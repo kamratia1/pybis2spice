@@ -46,6 +46,9 @@ def generate_spice_model(io_type, subcircuit_type, ibis_data, corner, output_fil
         if subcircuit_type == "LTSpice":
             ret = create_ltspice_output_model(ibis_data, corner, io_type, output_filepath)
 
+        if subcircuit_type == "ngSPICE":
+            ret = create_ngspice_output_model(ibis_data, corner, io_type, output_filepath)
+
     if io_type == "Input":
         ret = create_input_model(ibis_data, corner, io_type, output_filepath)
 
@@ -539,6 +542,61 @@ def create_ltspice_symbol(ibis_data, corner, model_path, io_type):
 
     return symbol_path
 
+def ngspice_stimulus_netlist_setup():
+    """
+    Returns a netlist string that sets up the ngSPICE stimulus sources for the model
+    """
+    # Setup the Stimulus setting options for the Pullup Waveform (Ku)
+    setup_str = ".model SW SW(Ron=1n Roff=1G Vt=.5 Vh=-.4)\n\n"
+    setup_str += "\n* Setup the Stimulus setting options for the Pullup Waveform (Ku)\n"
+    setup_str += ".if (stimulus_==1)"
+    setup_str += "V10 OSC 0 1\n"
+    setup_str += ".else"
+    setup_str += "V10 OSC 0 0\n"
+    setup_str += ".endif"
+    setup_str += ".if (stimulus_==2)"
+    setup_str += "V11 OSC_INV 0 1\n"
+    setup_str += ".else"
+    setup_str += "V11 OSC_INV 0 0\n"
+    setup_str += ".endif"
+    setup_str += ".if (stimulus_==3)"
+    setup_str += "V12 RISE 0 1\n"
+    setup_str += ".else"
+    setup_str += "V12 RISE 0 0\n"
+    setup_str += ".endif"
+    setup_str += ".if (stimulus_==4)"
+    setup_str += "V13 FALL 0 1\n"
+    setup_str += ".else"
+    setup_str += "V13 FALL 0 0\n"
+    setup_str += ".endif"
+    setup_str += ".if (stimulus_==5)"
+    setup_str += "V14 HIGH 0 1\n"
+    setup_str += ".else"
+    setup_str += "V14 HIGH 0 0\n"
+    setup_str += ".endif"
+    setup_str += ".if (stimulus_==6)"
+    setup_str += "V15 LOW 0 1\n"
+    setup_str += ".else"
+    setup_str += "V15 LOW 0 0\n"
+    setup_str += ".endif"
+    
+    setup_str += "S1 Ku K_U_OSC OSC 0 SW\n"
+    setup_str += "S2 Ku K_U_OSC_INV OSC_INV 0 SW\n"
+    setup_str += "S3 Ku K_U_RISE RISE 0 SW\n"
+    setup_str += "S4 Ku K_U_FALL FALL 0 SW\n"
+    setup_str += "S5 Ku K_U_HIGH HIGH 0 SW\n"
+    setup_str += "S6 Ku K_U_LOW LOW 0 SW\n"
+
+    # Setup the Stimulus setting options for the Pulldown Waveform (Kd)
+    setup_str += "\n* Setup the Stimulus setting options for the Pulldown Waveform (Kd)\n"
+    setup_str += "S7 Kd K_D_OSC OSC 0 SW\n"
+    setup_str += "S8 Kd K_D_OSC_INV OSC_INV 0 SW\n"
+    setup_str += "S9 Kd K_D_RISE RISE 0 SW\n"
+    setup_str += "S10 Kd K_D_FALL FALL 0 SW\n"
+    setup_str += "S11 Kd K_D_HIGH HIGH 0 SW\n"
+    setup_str += "S12 Kd K_D_LOW LOW 0 SW\n"
+
+    return setup_str
 
 def convert_iv_table_to_str(voltage, current):
     """
