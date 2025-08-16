@@ -152,7 +152,7 @@ def spice_rlc_netlist(ibis_data, corner, pin_name):
     return st
 
 
-def define_pwr_and_gnd_clamps(ibis_data, corner):
+def define_pwr_and_gnd_clamps(ibis_data, corner, ng=False):
     """
     Arbitrary Source definition for power and ground clamp
     Parameters:
@@ -175,18 +175,27 @@ def define_pwr_and_gnd_clamps(ibis_data, corner):
         return_val += f'V1 PWR_CLAMP_REF 0 {pwr_clamp_ref}\n'
         pwr_clamp_table_str = convert_iv_table_to_str(np.flip(pwr_clamp_ref - ibis_data.iv_pwr_clamp[:, 0]),
                                                       np.flip(ibis_data.iv_pwr_clamp[:, _CORNER_INDEX]))
-        return_val += f'B1 DIE PWR_CLAMP_REF I = table(V(DIE), {pwr_clamp_table_str})\n'
+        if ng:
+            pwr_clamp_table_str+= f',{pwr_clamp_ref-ibis_data.iv_pwr_clamp[0,0]+0.5} , {ibis_data.iv_pwr_clamp[0, _CORNER_INDEX]}'
+            return_val += f'B1 DIE PWR_CLAMP_REF I = pwl(V(DIE), {pwr_clamp_table_str})\n'
+        else:
+            return_val += f'B1 DIE PWR_CLAMP_REF I = table(V(DIE), {pwr_clamp_table_str})\n'
 
     if ibis_data.iv_gnd_clamp is not None:
         return_val += f'V2 GND_CLAMP_REF 0 {gnd_clamp_ref}\n'
         gnd_clamp_table_str = convert_iv_table_to_str(ibis_data.iv_gnd_clamp[:, 0] - gnd_clamp_ref,
                                                       ibis_data.iv_gnd_clamp[:, _CORNER_INDEX])
-        return_val += f'B2 DIE GND_CLAMP_REF I = table(V(DIE), {gnd_clamp_table_str})\n\n'
+        if ng:
+            gnd_clamp_table_str+= f',{gnd_clamp_ref-ibis_data.iv_gnd_clamp[-1,0]+0.5} , {ibis_data.iv_gnd_clamp[-1, _CORNER_INDEX]}'
+            return_val += f'B1 DIE GND_CLAMP_REF I = pwl(V(DIE), {gnd_clamp_table_str})\n'
+        else:
+            return_val += f'B2 DIE GND_CLAMP_REF I = table(V(DIE), {gnd_clamp_table_str})\n\n'
+        
 
     return return_val
 
 
-def define_pullup_and_pulldown_devices(ibis_data, corner):
+def define_pullup_and_pulldown_devices(ibis_data, corner, ng=False):
     """
     Arbitrary Source definition for pullup and pulldown devices
     Parameters:
@@ -208,14 +217,21 @@ def define_pullup_and_pulldown_devices(ibis_data, corner):
         return_val += f'V3 PULLUP_REF 0 {pullup_ref}\n'
         pullup_table_str = convert_iv_table_to_str(np.flip(pullup_ref - ibis_data.iv_pullup[:, 0]),
                                                    np.flip(ibis_data.iv_pullup[:, _CORNER_INDEX]))
-        return_val += f'B3 DIE PULLUP_REF I={{V(Ku)*table(V(DIE), {pullup_table_str})}}\n'
+        if ng:
+            pullup_table_str+= f',{pullup_ref-ibis_data.iv_pullup[0,0]+0.5} , {ibis_data.iv_pullup[0, _CORNER_INDEX]}'
+            return_val += f'B3 DIE PULLUP_REF I={{V(Ku)*pwl(V(DIE), {pullup_table_str})}}\n'
+        else:
+            return_val += f'B3 DIE PULLUP_REF I={{V(Ku)*table(V(DIE), {pullup_table_str})}}\n'
 
     if ibis_data.iv_pulldown is not None:
         return_val += f'V4 PULLDOWN_REF 0 {pulldown_ref}\n'
         pulldown_table_str = convert_iv_table_to_str(ibis_data.iv_pulldown[:, 0] - pulldown_ref,
                                                      ibis_data.iv_pulldown[:, _CORNER_INDEX])
-        return_val += f'B4 DIE PULLDOWN_REF I={{V(Kd)*table(V(DIE), {pulldown_table_str})}}\n\n'
-
+        if ng:
+            pulldown_table_str+= f',{pulldown_ref-ibis_data.iv_pulldown[-1,0]+0.5} , {ibis_data.iv_pulldown[-1, _CORNER_INDEX]}'
+            return_val += f'B4 DIE PULLDOWN_REF I={{V(Kd)*pwl(V(DIE), {pulldown_table_str})}})\n'
+        else:
+            return_val += f'B4 DIE PULLDOWN_REF I={{V(Kd)*table(V(DIE), {pulldown_table_str})}}\n\n'
     return return_val
 
 
@@ -488,7 +504,6 @@ def create_ltspice_output_model(ibis_data, corner, io_type, output_filepath):
 
     return return_val
 
-
 def create_ltspice_symbol(ibis_data, corner, model_path, io_type):
     """
     Creates an LTSpice symbol for the given model_path within the model_path directory
@@ -579,7 +594,7 @@ def ngspice_stimulus_netlist_setup():
     setup_str += ".else"
     setup_str += "V15 LOW 0 0\n"
     setup_str += ".endif"
-    
+
     setup_str += "S1 Ku K_U_OSC OSC 0 SW\n"
     setup_str += "S2 Ku K_U_OSC_INV OSC_INV 0 SW\n"
     setup_str += "S3 Ku K_U_RISE RISE 0 SW\n"
@@ -597,6 +612,156 @@ def ngspice_stimulus_netlist_setup():
     setup_str += "S12 Kd K_D_LOW LOW 0 SW\n"
 
     return setup_str
+
+def create_ngspice_output_model(ibis_data, corner, io_type, output_filepath):
+    """
+    Creates a SPICE subcircuit model designed for ngSPICE.
+    ngSPICE specific models provide extra functionality to manipulate the waveform stimulus of the output
+
+    Parameters:
+        ibis_data - a DataModel object (defined in pybis2spice.py)
+        corner - "Typical", "WeakSlow" or "FastStrong"
+        io_type - "Input" or "Output"
+        output_filepath - path of output file
+
+    Returns 0 if there are no errors in the creation
+    """
+
+    return_val = 0
+    try:
+        _INDEX = convert_corner_str_to_index(corner)
+        _CORNER_INDEX = _INDEX + 1
+
+        if ibis_data.model_type.lower() == "open_drain":
+            kr = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
+            kf = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
+        else:
+            kr = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
+            kf = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
+
+        kr = pybis2spice.compress_param(kr)
+        kf = pybis2spice.compress_param(kf)
+
+        with open(output_filepath, 'w') as file:
+
+            parameter_info = "* Note: This model may only work in LTSpice.\n"
+            parameter_info += "* Stimulus Options: \n" \
+                              "*\t1 - Oscillate at given freq and duty\n" \
+                              "*\t2 - Inverted Oscillate at given freq and duty\n" \
+                              "*\t3 - Rising Edge with delay\n" \
+                              "*\t4 - Falling Edge with delay\n" \
+                              "*\t5 - Stuck High\n" \
+                              "*\t6 - Stuck Low\n" \
+                              "*\t7 - HighZ (if 3-State output)\n\n"
+            header = spice_header_info(ibis_data, corner, extra_info=parameter_info)
+            file.write(header)
+
+            subcircuit = f'.SUBCKT {ibis_data.model_name}_{io_type}_{corner} '
+            subcircuit_params = f'OUT stimulus=1 freq=10Meg duty=0.5 delay=0 \n\n'
+
+            file.write(subcircuit + subcircuit_params)
+
+            rlc_netlist = spice_rlc_netlist(ibis_data, corner, pin_name="OUT")
+            file.write(rlc_netlist)
+
+            clamps_netlist = define_pwr_and_gnd_clamps(ibis_data, corner, ng=True)
+            file.write(clamps_netlist)
+
+            device_netlist = define_pullup_and_pulldown_devices(ibis_data, corner, ng=True)
+            file.write(device_netlist)
+
+            stimulus_netlist = ngspice_stimulus_netlist_setup() # Look at this in more detail
+            file.write(stimulus_netlist)
+
+            (offset_neg_r, offset_pos_r) = determine_crossover_offsets(kr)
+            (offset_neg_f, offset_pos_f) = determine_crossover_offsets(kf)
+
+            # Calculations for defining the frequency and duty cycle of the oscillation stimuli'
+            file.write(f'\n* Define Oscillation Sources\n')
+            file.write(f'.param calc_gap_pos = {{(duty/freq) - {offset_pos_r} - {offset_neg_f}}}\n')
+            file.write(f'.param calc_gap_neg = {{((1-duty)/freq) - {offset_pos_f} - {offset_neg_r}}}\n\n')
+            file.write(f'.if (calc_gap_pos<=0)\n')
+            file.write(f'.param GAP_POS = 0.1e-12\n')
+            file.write('.else\n')
+            file.write('.param GAP_POS = calc_gap_pos\n')
+            file.write('.endif\n\n')
+            file.write(f'.if (calc_gap_neg<=0)\n')
+            file.write(f'.param GAP_NEG = 0.1e-12\n')
+            file.write('.else\n')
+            file.write('.param GAP_NEG = calc_gap_pos\n')
+            file.write('.endif\n\n')
+
+            max_stimulus = 6
+            if ibis_data.model_type.lower() == "3-state":
+                max_stimulus = 7
+
+            # Limit the stimulus between 1 and 7
+            file.write(f'.if (stimulus < 1)\n')
+            file.write(f'.param stimulus_ =  1\n')
+            file.write(f'.elseif (stimulus > {max_stimulus})\n')
+            file.write(f'.param stimulus_ =  {max_stimulus}\n')
+            file.write('.else\n')
+            file.write(f'.param stimulus_ = stimulus\n\n')
+            file.write('.endif\n\n')
+
+            # Oscillation Strings
+            if ibis_data.model_type.lower() == "open_drain":
+                kd_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KD_OD], kf[:, _TIME], kf[:, _KD_OD])
+            else:
+                ku_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KU], kf[:, _TIME], kf[:, _KU])
+                kd_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KD], kf[:, _TIME], kf[:, _KD])
+
+            if ibis_data.model_type.lower() == "open_drain":
+                kd_inv_osc_str = create_osc_waveform_pwl(kf[:, _TIME], kf[:, _KD_OD], kr[:, _TIME], kr[:, _KD_OD])
+            else:
+                ku_inv_osc_str = create_osc_waveform_pwl(kf[:, _TIME], kf[:, _KU], kr[:, _TIME], kr[:, _KU])
+                kd_inv_osc_str = create_osc_waveform_pwl(kf[:, _TIME], kf[:, _KD], kr[:, _TIME], kr[:, _KD])
+
+            # Rising Edge Strings
+            if ibis_data.model_type.lower() == "open_drain":
+                kdr_str = create_edge_waveform_pwl(kr[:, _TIME], kr[:, _KD_OD])
+            else:
+                kur_str = create_edge_waveform_pwl(kr[:, _TIME], kr[:, _KU])
+                kdr_str = create_edge_waveform_pwl(kr[:, _TIME], kr[:, _KD])
+
+            # Falling Edge Strings
+            if ibis_data.model_type.lower() == "open_drain":
+                kdf_str = create_edge_waveform_pwl(kf[:, _TIME], kf[:, _KD_OD])
+            else:
+                kuf_str = create_edge_waveform_pwl(kf[:, _TIME], kf[:, _KU])
+                kdf_str = create_edge_waveform_pwl(kf[:, _TIME], kf[:, _KD])
+
+            if ibis_data.model_type.lower() != "open_drain":
+                # Setup the K-Parameter waveforms for the Pullup transistor (Ku)
+                file.write(f"V16 K_U_OSC 0 PWL({ku_osc_str}) r=0\n")
+                file.write(f"V17 K_U_HIGH 0 1\n")
+                file.write(f"V18 K_U_LOW 0 0\n")
+                file.write(f"V19 K_U_OSC_INV 0 PWL({ku_inv_osc_str}) r=0\n")
+                file.write(f"V20 K_U_RISE 0 PWL({kur_str})\n")
+                file.write(f"V21 K_U_FALL 0 PWL({kuf_str})\n")
+
+            # Setup the K-Parameter waveforms for the Pullup transistor (Kd)
+            file.write(f"V36 K_D_OSC 0 PWL({kd_osc_str}) r=0\n")
+            file.write(f"V37 K_D_HIGH 0 0\n")
+            file.write(f"V38 K_D_LOW 0 1\n")
+            file.write(f"V39 K_D_OSC_INV 0 PWL({kd_inv_osc_str}) r=0\n")
+            file.write(f"V40 K_D_RISE 0 PWL({kdr_str})\n")
+            file.write(f"V41 K_D_FALL 0 PWL({kdf_str})\n")
+
+            if ibis_data.model_type.lower() == "3-state":
+                file.write(".if(stimulus==7)\n")
+                file.write("V50 EN 0 1\n")
+                file.write(".else\n")
+                file.write("V50 EN 0 0\n")
+                file.write(".endif\n")
+                file.write("S13 Ku 0 EN 0 SW\n")
+                file.write("S14 Kd 0 EN 0 SW\n")
+
+            file.write(f'\n.ENDS\n')
+    except:
+        return_val = 1
+
+    return return_val
 
 def convert_iv_table_to_str(voltage, current):
     """
