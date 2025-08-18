@@ -805,11 +805,14 @@ if __name__ == '__main__':
     radio_var1 = tk.StringVar()
     radio1 = tk.Radiobutton(master=frame3, text="LTSpice", variable=radio_var1, value="LTSpice")
     radio2 = tk.Radiobutton(master=frame3, text="Generic", variable=radio_var1, value="Generic")
+    radio3 = tk.Radiobutton(master=frame3, text="ngSPICE", variable=radio_var1, value="ngSPICE")
     radio1.select()  # Select LTSpice as default type
     radio1.place(x=170, y=10)
     radio2.place(x=250, y=10)
+    radio3.place(x=330, y=10)
     ToolTip(radio1, msg="produces a subcircuit file containing special syntax specific to LTSpice", delay=0.2)
     ToolTip(radio2, msg="produces a subcircuit file that most Spice simulators should be able to parse", delay=0.2)
+    ToolTip(radio3, msg="produces a subcircuit file containing special syntax specific to ngSPICE", delay=0.2)
 
     # Radio Buttons for Corner Select
     label4 = tk.Label(master=frame3, text="Corner Select")
