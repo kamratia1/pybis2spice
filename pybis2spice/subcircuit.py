@@ -50,7 +50,7 @@ def generate_spice_model(io_type, subcircuit_type, ibis_data, corner, output_fil
             ret = create_ngspice_output_model(ibis_data, corner, io_type, output_filepath)
 
     if io_type == "Input":
-        ret = create_input_model(ibis_data, corner, io_type, output_filepath)
+        ret = create_input_model(ibis_data, corner, io_type, output_filepath, ng=subcircuit_type=="ngSPICE")
 
     return ret
 
@@ -186,8 +186,8 @@ def define_pwr_and_gnd_clamps(ibis_data, corner, ng=False):
         gnd_clamp_table_str = convert_iv_table_to_str(ibis_data.iv_gnd_clamp[:, 0] - gnd_clamp_ref,
                                                       ibis_data.iv_gnd_clamp[:, _CORNER_INDEX])
         if ng:
-            gnd_clamp_table_str+= f',{gnd_clamp_ref-ibis_data.iv_gnd_clamp[-1,0]+0.5} , {ibis_data.iv_gnd_clamp[-1, _CORNER_INDEX]}'
-            return_val += f'B1 DIE GND_CLAMP_REF I = pwl(V(DIE), {gnd_clamp_table_str})\n'
+            gnd_clamp_table_str+= f',{ibis_data.iv_gnd_clamp[-1,0]-gnd_clamp_ref+0.5} , {ibis_data.iv_gnd_clamp[-1, _CORNER_INDEX]}'
+            return_val += f'B2 DIE GND_CLAMP_REF I = pwl(V(DIE), {gnd_clamp_table_str})\n'
         else:
             return_val += f'B2 DIE GND_CLAMP_REF I = table(V(DIE), {gnd_clamp_table_str})\n\n'
         
@@ -218,7 +218,7 @@ def define_pullup_and_pulldown_devices(ibis_data, corner, ng=False):
         pullup_table_str = convert_iv_table_to_str(np.flip(pullup_ref - ibis_data.iv_pullup[:, 0]),
                                                    np.flip(ibis_data.iv_pullup[:, _CORNER_INDEX]))
         if ng:
-            pullup_table_str+= f',{pullup_ref-ibis_data.iv_pullup[0,0]+0.5} , {ibis_data.iv_pullup[0, _CORNER_INDEX]}'
+            pullup_table_str+= f', {pullup_ref-ibis_data.iv_pullup[0,0]+0.5} , {ibis_data.iv_pullup[0, _CORNER_INDEX]}'
             return_val += f'B3 DIE PULLUP_REF I={{V(Ku)*pwl(V(DIE), {pullup_table_str})}}\n'
         else:
             return_val += f'B3 DIE PULLUP_REF I={{V(Ku)*table(V(DIE), {pullup_table_str})}}\n'
@@ -228,14 +228,14 @@ def define_pullup_and_pulldown_devices(ibis_data, corner, ng=False):
         pulldown_table_str = convert_iv_table_to_str(ibis_data.iv_pulldown[:, 0] - pulldown_ref,
                                                      ibis_data.iv_pulldown[:, _CORNER_INDEX])
         if ng:
-            pulldown_table_str+= f',{pulldown_ref-ibis_data.iv_pulldown[-1,0]+0.5} , {ibis_data.iv_pulldown[-1, _CORNER_INDEX]}'
+            pulldown_table_str+= f', {ibis_data.iv_pulldown[-1 ,0]-pulldown_ref+0.5} , {ibis_data.iv_pulldown[-1, _CORNER_INDEX]}'
             return_val += f'B4 DIE PULLDOWN_REF I={{V(Kd)*pwl(V(DIE), {pulldown_table_str})}})\n'
         else:
             return_val += f'B4 DIE PULLDOWN_REF I={{V(Kd)*table(V(DIE), {pulldown_table_str})}}\n\n'
     return return_val
 
 
-def create_input_model(ibis_data, corner, io_type, output_filepath):
+def create_input_model(ibis_data, corner, io_type, output_filepath, ng=False):
     """
     Creates a SPICE generic subcircuit model.
     Generic models are simple and only supports a single oscillation pulse with a given frequency
@@ -252,18 +252,17 @@ def create_input_model(ibis_data, corner, io_type, output_filepath):
         header = spice_header_info(ibis_data, corner)
         file.write(header)
 
-        file.write(f'.SUBCKT {ibis_data.model_name}-{io_type}-{corner} IN\n\n')
+        file.write(f'.SUBCKT {ibis_data.model_name}_{io_type}_{corner} IN\n\n')
 
         rlc_netlist = spice_rlc_netlist(ibis_data, corner, pin_name="IN")
         file.write(rlc_netlist)
 
-        clamps_netlist = define_pwr_and_gnd_clamps(ibis_data, corner)
+        clamps_netlist = define_pwr_and_gnd_clamps(ibis_data, corner, ng)
         file.write(clamps_netlist)
 
         file.write(f'.ENDS\n')
 
     return 0
-
 
 def create_generic_output_model(ibis_data, corner, io_type, output_filepath):
     """
@@ -564,36 +563,36 @@ def ngspice_stimulus_netlist_setup():
     # Setup the Stimulus setting options for the Pullup Waveform (Ku)
     setup_str = ".model SW SW(Ron=1n Roff=1G Vt=.5 Vh=-.4)\n\n"
     setup_str += "\n* Setup the Stimulus setting options for the Pullup Waveform (Ku)\n"
-    setup_str += ".if (stimulus_==1)"
+    setup_str += ".if (stimulus_==1)\n"
     setup_str += "V10 OSC 0 1\n"
-    setup_str += ".else"
+    setup_str += ".else\n"
     setup_str += "V10 OSC 0 0\n"
-    setup_str += ".endif"
-    setup_str += ".if (stimulus_==2)"
+    setup_str += ".endif\n"
+    setup_str += ".if (stimulus_==2)\n"
     setup_str += "V11 OSC_INV 0 1\n"
-    setup_str += ".else"
+    setup_str += ".else\n"
     setup_str += "V11 OSC_INV 0 0\n"
-    setup_str += ".endif"
-    setup_str += ".if (stimulus_==3)"
+    setup_str += ".endif\n"
+    setup_str += ".if (stimulus_==3)\n"
     setup_str += "V12 RISE 0 1\n"
-    setup_str += ".else"
+    setup_str += ".else\n"
     setup_str += "V12 RISE 0 0\n"
-    setup_str += ".endif"
-    setup_str += ".if (stimulus_==4)"
+    setup_str += ".endif\n"
+    setup_str += ".if (stimulus_==4)\n"
     setup_str += "V13 FALL 0 1\n"
-    setup_str += ".else"
+    setup_str += ".else\n"
     setup_str += "V13 FALL 0 0\n"
-    setup_str += ".endif"
-    setup_str += ".if (stimulus_==5)"
+    setup_str += ".endif\n"
+    setup_str += ".if (stimulus_==5)\n"
     setup_str += "V14 HIGH 0 1\n"
-    setup_str += ".else"
+    setup_str += ".else\n"
     setup_str += "V14 HIGH 0 0\n"
-    setup_str += ".endif"
-    setup_str += ".if (stimulus_==6)"
+    setup_str += ".endif\n"
+    setup_str += ".if (stimulus_==6)\n"
     setup_str += "V15 LOW 0 1\n"
-    setup_str += ".else"
+    setup_str += ".else\n"
     setup_str += "V15 LOW 0 0\n"
-    setup_str += ".endif"
+    setup_str += ".endif\n"
 
     setup_str += "S1 Ku K_U_OSC OSC 0 SW\n"
     setup_str += "S2 Ku K_U_OSC_INV OSC_INV 0 SW\n"
@@ -798,7 +797,7 @@ def create_edge_waveform_pwl(time, k_param):
     return str_val
 
 
-def create_osc_waveform_pwl(t1, k1, t2, k2):
+def create_osc_waveform_pwl(t1, k1, t2, k2, ng=True):
     """
     Creates the PWL value string for the oscillation waveform
 
@@ -811,10 +810,26 @@ def create_osc_waveform_pwl(t1, k1, t2, k2):
         Returns:
             str_val: the string that goes into the oscillator PWL source
     """
+    def _create_ngspice_osc_waveform_pwl(t1, k1, t2, k2):
+        str_val = ''
+        for i in range(1, len(t1)):
+            str_val = str_val + f' {t1[i]} {k1[i]}'
+        
+        str_val = str_val + f' {{{t1[-1]}+{{GAP_POS}}}} {k1[-1]} {t2[0]} {k2[0]}'
+
+        for i in range(1, len(t2)):
+            str_val = str_val + f' {t2[i]+t1[-1]} {k2[i]}'
+
+        str_val = str_val + f' {{{t2[-1]+t1[-1]}+{{GAP_NEG}}}} {k2[-1]}'
+        return str_val
+    
+    if ng:
+        return _create_ngspice_osc_waveform_pwl(t1, k1, t2, k2)
 
     # First Edge
     # the +0.01p fudge is for Simetrix as it seems to have a bug in its PWLS source
     # where it cannot start at any value other than 0 regardless of the k_r[0] value
+    
     str_val = f'0 {k1[0]} +0.01e-12 {k1[0]}'
     for i in range(1, len(t1)):
         dt = t1[i] - t1[i - 1]
