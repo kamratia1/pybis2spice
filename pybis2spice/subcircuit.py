@@ -687,7 +687,7 @@ def create_ngspice_output_model(ibis_data, corner, io_type, output_filepath):
             file.write(f'.if (calc_gap_neg<=0)\n')
             file.write(f'.param GAP_NEG = 0.1e-12\n')
             file.write('.else\n')
-            file.write('.param GAP_NEG = calc_gap_pos\n')
+            file.write('.param GAP_NEG = calc_gap_neg\n')
             file.write('.endif\n\n')
 
             max_stimulus = 6
