@@ -815,7 +815,7 @@ def create_osc_waveform_pwl(t1, k1, t2, k2, ng=False):
         for i in range(len(t1)):
             str_val = str_val + f' {{{t1[i]}}} {k1[i]}'
         
-        str_val = str_val + f' {{{t1[-1]}+{{GAP_POS}}}} {k1[-1]}'
+        str_val = str_val + f' {{{t1[-1]}+{{GAP_POS*0.99}}}} {k1[-1]}'
 
         for i in range(len(t2)):
             str_val = str_val + f' {{{t1[-1]}+{t2[i]}+{{GAP_POS}}}} {k2[i]}'
