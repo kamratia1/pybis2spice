@@ -736,16 +736,16 @@ def create_ngspice_output_model(ibis_data, corner, io_type, output_filepath):
                 file.write(f"V17 K_U_HIGH 0 1\n")
                 file.write(f"V18 K_U_LOW 0 0\n")
                 file.write(f"V19 K_U_OSC_INV 0 PWL({ku_inv_osc_str}) r=0 td={{delay}}\n")
-                file.write(f"V20 K_U_RISE 0 PWL({kur_str})\n")
-                file.write(f"V21 K_U_FALL 0 PWL({kuf_str})\n")
+                file.write(f"V20 K_U_RISE 0 PWL({kur_str}) td={{delay}}\n")
+                file.write(f"V21 K_U_FALL 0 PWL({kuf_str}) td={{delay}}\n")
 
             # Setup the K-Parameter waveforms for the Pullup transistor (Kd)
             file.write(f"V36 K_D_OSC 0 PWL({kd_osc_str}) r=0 td={{delay}}\n")
             file.write(f"V37 K_D_HIGH 0 0\n")
             file.write(f"V38 K_D_LOW 0 1\n")
             file.write(f"V39 K_D_OSC_INV 0 PWL({kd_inv_osc_str}) r=0 td={{delay}}\n")
-            file.write(f"V40 K_D_RISE 0 PWL({kdr_str})\n")
-            file.write(f"V41 K_D_FALL 0 PWL({kdf_str})\n")
+            file.write(f"V40 K_D_RISE 0 PWL({kdr_str}) td={{delay}}\n")
+            file.write(f"V41 K_D_FALL 0 PWL({kdf_str}) td={{delay}}\n")
 
             if ibis_data.model_type.lower() == "3-state":
                 file.write(".if(stimulus==7)\n")
@@ -791,9 +791,9 @@ def create_edge_waveform_pwl(time, k_param):
         Returns:
             str_val: the string that goes into PWL source for the edge
     """
-    str_val = f'{{delay}}, {k_param[0]}'
+    str_val = f'0, {k_param[0]}'
     for i in range(1, len(time)):
-        str_val = str_val + f', {{delay+{time[i]}}}, {k_param[i]}'
+        str_val = str_val + f', {{{time[i]}}}, {k_param[i]}'
     return str_val
 
 
