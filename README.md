@@ -25,6 +25,7 @@ The bin folder holds a zipped file for each released version containing a window
 This option creates a subcircuit that is specifically intended to be used with LTSpice. 
 This is the recommended option as it provides the most flexibility for output model stimulus sources. 
 * Generic: generic option produces a subcircuit file that most Spice simulators should be able to parse.
+* ngSPICE: ngSPICE option produces a subcircuit file that is compatible with ngSPICE and can therefore be used for KiCAD and QUCS-S simulation as well as PySPICE simulations. This works with the same output model stimulus sources as provided by the LTSpice option. 
 
 ### Corner Select: 
 * Weak-Slow: Combines the minimum (weak) I-V curves and minimum (slow) Voltage-Time waveforms   
