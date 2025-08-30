@@ -732,18 +732,18 @@ def create_ngspice_output_model(ibis_data, corner, io_type, output_filepath):
 
             if ibis_data.model_type.lower() != "open_drain":
                 # Setup the K-Parameter waveforms for the Pullup transistor (Ku)
-                file.write(f"V16 K_U_OSC 0 PWL({ku_osc_str}) r=0\n")
+                file.write(f"V16 K_U_OSC 0 PWL({ku_osc_str}) r=0 td={{delay}}\n")
                 file.write(f"V17 K_U_HIGH 0 1\n")
                 file.write(f"V18 K_U_LOW 0 0\n")
-                file.write(f"V19 K_U_OSC_INV 0 PWL({ku_inv_osc_str}) r=0\n")
+                file.write(f"V19 K_U_OSC_INV 0 PWL({ku_inv_osc_str}) r=0 td={{delay}}\n")
                 file.write(f"V20 K_U_RISE 0 PWL({kur_str})\n")
                 file.write(f"V21 K_U_FALL 0 PWL({kuf_str})\n")
 
             # Setup the K-Parameter waveforms for the Pullup transistor (Kd)
-            file.write(f"V36 K_D_OSC 0 PWL({kd_osc_str}) r=0\n")
+            file.write(f"V36 K_D_OSC 0 PWL({kd_osc_str}) r=0 td={{delay}}\n")
             file.write(f"V37 K_D_HIGH 0 0\n")
             file.write(f"V38 K_D_LOW 0 1\n")
-            file.write(f"V39 K_D_OSC_INV 0 PWL({kd_inv_osc_str}) r=0\n")
+            file.write(f"V39 K_D_OSC_INV 0 PWL({kd_inv_osc_str}) r=0 td={{delay}}\n")
             file.write(f"V40 K_D_RISE 0 PWL({kdr_str})\n")
             file.write(f"V41 K_D_FALL 0 PWL({kdf_str})\n")
 
