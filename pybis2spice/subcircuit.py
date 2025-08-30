@@ -705,16 +705,16 @@ def create_ngspice_output_model(ibis_data, corner, io_type, output_filepath):
 
             # Oscillation Strings
             if ibis_data.model_type.lower() == "open_drain":
-                kd_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KD_OD], kf[:, _TIME], kf[:, _KD_OD])
+                kd_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KD_OD], kf[:, _TIME], kf[:, _KD_OD], ng=True)
             else:
-                ku_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KU], kf[:, _TIME], kf[:, _KU])
-                kd_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KD], kf[:, _TIME], kf[:, _KD])
+                ku_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KU], kf[:, _TIME], kf[:, _KU], ng=True)
+                kd_osc_str = create_osc_waveform_pwl(kr[:, _TIME], kr[:, _KD], kf[:, _TIME], kf[:, _KD], ng=True)
 
             if ibis_data.model_type.lower() == "open_drain":
-                kd_inv_osc_str = create_osc_waveform_pwl(kf[:, _TIME], kf[:, _KD_OD], kr[:, _TIME], kr[:, _KD_OD])
+                kd_inv_osc_str = create_osc_waveform_pwl(kf[:, _TIME], kf[:, _KD_OD], kr[:, _TIME], kr[:, _KD_OD], ng=True)
             else:
-                ku_inv_osc_str = create_osc_waveform_pwl(kf[:, _TIME], kf[:, _KU], kr[:, _TIME], kr[:, _KU])
-                kd_inv_osc_str = create_osc_waveform_pwl(kf[:, _TIME], kf[:, _KD], kr[:, _TIME], kr[:, _KD])
+                ku_inv_osc_str = create_osc_waveform_pwl(kf[:, _TIME], kf[:, _KU], kr[:, _TIME], kr[:, _KU], ng=True)
+                kd_inv_osc_str = create_osc_waveform_pwl(kf[:, _TIME], kf[:, _KD], kr[:, _TIME], kr[:, _KD], ng=True)
 
             # Rising Edge Strings
             if ibis_data.model_type.lower() == "open_drain":
@@ -797,7 +797,7 @@ def create_edge_waveform_pwl(time, k_param):
     return str_val
 
 
-def create_osc_waveform_pwl(t1, k1, t2, k2, ng=True):
+def create_osc_waveform_pwl(t1, k1, t2, k2, ng=False):
     """
     Creates the PWL value string for the oscillation waveform
 
@@ -812,15 +812,15 @@ def create_osc_waveform_pwl(t1, k1, t2, k2, ng=True):
     """
     def _create_ngspice_osc_waveform_pwl(t1, k1, t2, k2):
         str_val = ''
-        for i in range(1, len(t1)):
-            str_val = str_val + f' {t1[i]} {k1[i]}'
+        for i in range(len(t1)):
+            str_val = str_val + f' {{{t1[i]}}} {k1[i]}'
         
-        str_val = str_val + f' {{{t1[-1]}+{{GAP_POS}}}} {k1[-1]} {t2[0]} {k2[0]}'
+        str_val = str_val + f' {{{t1[-1]}+{{GAP_POS}}}} {k1[-1]}'
 
-        for i in range(1, len(t2)):
-            str_val = str_val + f' {t2[i]+t1[-1]} {k2[i]}'
+        for i in range(len(t2)):
+            str_val = str_val + f' {{{t1[-1]}+{t2[i]}+{{GAP_POS}}}} {k2[i]}'
 
-        str_val = str_val + f' {{{t2[-1]+t1[-1]}+{{GAP_NEG}}}} {k2[-1]}'
+        str_val = str_val + f' {{{t1[-1]}+{t2[-1]}+{{GAP_POS}}+{{GAP_NEG}}}} {k2[-1]}'
         return str_val
     
     if ng:
