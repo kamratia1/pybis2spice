@@ -816,12 +816,12 @@ def create_osc_waveform_pwl(t1, k1, t2, k2, ng=False):
         for i in range(len(t1)):
             str_val = str_val + f' {{{t1[i]}}} {k1[i]}'
         
-        str_val = str_val + f' {{{t1[-1]}+{{GAP_POS*0.25}}}} {k1[-1] + (k2[0]-k1[-1])/np.e**3} {{{t1[-1]}+{{GAP_POS*0.33}}}} {k1[-1] + (k2[0]-k1[-1])/np.e**2} {{{t1[-1]}+{{GAP_POS*0.5}}}} {k1[-1] + (k2[0]-k1[-1])/np.e}' 
+        str_val = str_val + f' {{{t1[-1]}+GAP_POS*0.25}} {k1[-1] + (k2[0]-k1[-1])/np.e**3} {{{t1[-1]}+GAP_POS*0.33}} {k1[-1] + (k2[0]-k1[-1])/np.e**2} {{{t1[-1]}+GAP_POS*0.5}} {k1[-1] + (k2[0]-k1[-1])/np.e}' 
 
         for i in range(len(t2)):
-            str_val = str_val + f' {{{t1[-1]}+{t2[i]}+{{GAP_POS}}}} {k2[i]}'
+            str_val = str_val + f' {{{t1[-1]}+{t2[i]}+GAP_POS}} {k2[i]}'
 
-        str_val = str_val + f' {{{t1[-1]}+{t2[-1]}+{{GAP_POS}}+{{GAP_NEG}}}} {k2[-1]}'
+        str_val = str_val + f' {{{t1[-1]}+{t2[-1]}+GAP_POS+GAP_NEG}} {k2[-1]}'
         return str_val
     
     if ng:
