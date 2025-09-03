@@ -178,6 +178,7 @@ def create_subcircuit_file_callback():
     io_type = radio_var3.get()
     subcircuit_type = radio_var1.get()  # LTSpice or Generic
     corner = radio_var2.get()
+    truncation = input_var.get()
 
     main_window.config(cursor="wait")
     global ibis_model
@@ -199,7 +200,7 @@ def create_subcircuit_file_callback():
             logging.info(f"Subcircuit Type: {subcircuit_type}")
             logging.info(f"Corner: {corner}")
             logging.info(f"I/O Select: {io_type}")
-            create_subcircuit_file(ibis_data, subcircuit_type, corner, io_type)
+            create_subcircuit_file(ibis_data, subcircuit_type, corner, io_type, truncation)
 
 
 def get_warnings_from_file(filepaths):
@@ -215,7 +216,7 @@ def get_warnings_from_file(filepaths):
     return warnings
 
 
-def create_subcircuit_file(ibis_data, subcircuit_type, corner, io_type):
+def create_subcircuit_file(ibis_data, subcircuit_type, corner, io_type, truncation):
 
     if corner == "All":
         file = filedialog.askdirectory(parent=main_window)
@@ -243,7 +244,8 @@ def create_subcircuit_file(ibis_data, subcircuit_type, corner, io_type):
                                                           subcircuit_type=subcircuit_type,
                                                           ibis_data=ibis_data,
                                                           corner=_corner,
-                                                          output_filepath=filepath)
+                                                          output_filepath=filepath,
+                                                          truncation=truncation)
                 generate_model_status += ret_val
 
             if generate_model_status == 0:
@@ -279,7 +281,8 @@ def create_subcircuit_file(ibis_data, subcircuit_type, corner, io_type):
                                                                     subcircuit_type=subcircuit_type,
                                                                     ibis_data=ibis_data,
                                                                     corner=corner,
-                                                                    output_filepath=file.name)
+                                                                    output_filepath=file.name,
+                                                                    truncation=truncation)
             if generate_model_status == 0:
                 message_success = f"SPICE subcircuit model successfully created at:\n{file.name}"
 
@@ -717,12 +720,11 @@ def create_model_parameters_table(ibis_data, tab_obj):
 
     return table
 
-
 # Run the main main_window
 if __name__ == '__main__':
 
     _width = 740
-    _height = 480
+    _height = 540
 
     if check_platform() == "Mac":
         _width = 900
@@ -796,12 +798,12 @@ if __name__ == '__main__':
     # ---------------------------------------------------------------------------
     # Frame 3: SPICE subcircuit options
     # ---------------------------------------------------------------------------
-    frame3 = tk.Frame(main_window, height=150, width=_width, relief=tk.SUNKEN, borderwidth=1)
+    frame3 = tk.Frame(main_window, height=200, width=_width, relief=tk.SUNKEN, borderwidth=1)
     frame3.pack(padx=10, pady=10)
     label3 = tk.Label(master=frame3, text="Spice Subcircuit Options")
     label3.place(x=10, y=10)
 
-    # Radio Buttons for LTSpice vs Generic
+    # Radio Buttons for LTSpice vs Generic vs ngSPICE
     radio_var1 = tk.StringVar()
     radio1 = tk.Radiobutton(master=frame3, text="LTSpice", variable=radio_var1, value="LTSpice")
     radio2 = tk.Radiobutton(master=frame3, text="Generic", variable=radio_var1, value="Generic")
@@ -849,13 +851,44 @@ if __name__ == '__main__':
     ToolTip(radio7, msg="subcircuit will be created for the input pin - no pullup/pulldown transistors", delay=0.2)
     ToolTip(radio8, msg="subcircuit will be created for the output pin - with pullup/pulldown transistors", delay=0.2)
 
+
+
+    label6 = tk.Label(master=frame3, text="Truncate Rising/Falling Waveforms")
+    label6.place(x=10, y=110)
+    check_var = tk.BooleanVar(value=False)
+    check1 = tk.Checkbutton(master=frame3, text="Enable", variable=check_var)
+    check1.place(x=250, y=110)
+    input_var = tk.DoubleVar()
+    input_box = tk.Entry(master=frame3, textvariable=input_var, state='disabled')
+    input_box.place(x=330, y=110)
+
+    ToolTip(input_box, msg="percentage difference between final values to use as truncation criteria in decimal form", delay=0.2)
+
+    def update_button_state(*args): # Callback function for trace
+        if check_var.get():
+            input_box.configure(state="normal")
+            input_var.set(0.0005)
+        else:
+            input_box.configure(state="disabled")
+            input_var.set(0.0)
+
+    check_var.trace_add("write", update_button_state)
+
+    def clamp_input_var(*args): # Callback function for trace
+        if input_var.get() > 1:
+            input_var.set(1.0)
+        elif input_var.get() < 0:
+            input_var.set(0.0)
+
+    input_var.trace_add("write", clamp_input_var)
+
     btn3 = tk.Button(master=frame3, text="Help", command=help_message_callback)
-    btn3.place(x=10, y=110)
+    btn3.place(x=10, y=150)
 
     btn4_xpos = 50
     if check_platform() == "Mac":
         btn4_xpos = 80
     btn4 = tk.Button(master=frame3, text="Create SPICE Subcircuit", command=create_subcircuit_file_callback)
-    btn4.place(x=btn4_xpos, y=110)
+    btn4.place(x=btn4_xpos, y=150)
 
     main_window.mainloop()

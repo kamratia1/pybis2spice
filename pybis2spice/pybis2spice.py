@@ -316,7 +316,7 @@ def get_reference(ref, v_range, corner):
     return value
 
 
-def generating_current_data(ibis_data, time, corner, waveform_obj):
+def generating_current_data(ibis_data, time, corner, waveform_obj, truncation):
     """
     Generates the current waveforms for the devices and clamps with respect to the given time array
 
@@ -325,6 +325,7 @@ def generating_current_data(ibis_data, time, corner, waveform_obj):
         time: a numpy array of time values
         corner: value of either 1, 2 or 3 to signify the typical , slow-weak (min) and fast-strong (max) corners
         waveform_obj: the relevant Waveform object
+        truncation: cutoff percentage for truncating the end of the waveform
 
     Returns:
         tuple of values (i_pu, i_pd, i_pc, i_gc, i_out, i_c_comp)
@@ -342,6 +343,11 @@ def generating_current_data(ibis_data, time, corner, waveform_obj):
 
     # Get the voltage waveform corresponding to the given time array
     vt = np.interp(time, waveform_obj.data[:, _TIME], waveform_obj.data[:, corner])
+
+    if truncation>0:
+        trunc_idx = find_waveform_cutoff_for_truncation(vt, truncation)
+    else:
+        trunc_idx=0
 
     pullup_ref = get_reference(ibis_data.pullup_ref, ibis_data.v_range, corner)
     pulldown_ref = get_reference(ibis_data.pulldown_ref, 0, corner)
@@ -362,12 +368,12 @@ def generating_current_data(ibis_data, time, corner, waveform_obj):
     i_rfix = (waveform_obj.v_fix[corner - 1] - vt) / waveform_obj.r_fix
 
     # Current through the die capacitance (c_comp) --> i_c_comp = c_comp * dvt/dt
-    i_c_comp = ibis_data.c_comp[corner - 1] * differentiate(vt, time)
+    i_c_comp = ibis_data.c_comp[corner - 1] * differentiate(vt, time[0:len(vt)])
 
-    return i_pu, i_pd, i_pc, i_gc, i_rfix, i_c_comp
+    return i_pu, i_pd, i_pc, i_gc, i_rfix, i_c_comp, trunc_idx
 
 
-def solve_k_params_output(ibis_data, corner=1, waveform_type="Rising"):
+def solve_k_params_output(ibis_data, corner=1, waveform_type="Rising", truncation=0):
     """
     Solves the k-parameters for the ibis model for any 2 or 3-state output buffer
 
@@ -395,13 +401,15 @@ def solve_k_params_output(ibis_data, corner=1, waveform_type="Rising"):
     # Sort the time samples to be monotonic and remove any duplicate time samples
     time = np.sort(time)
     time = np.unique(time)
-    array_size = np.shape(time)[0]
 
     # Getting the device and clamp current waveforms based on the new time series
-    (i_pu1, i_pd1, i_pc1, i_gc1, i_rfix1, i_c_comp1) = generating_current_data(ibis_data, time, corner, waveform1)
-    (i_pu2, i_pd2, i_pc2, i_gc2, i_rfix2, i_c_comp2) = generating_current_data(ibis_data, time, corner, waveform2)
+    (i_pu1, i_pd1, i_pc1, i_gc1, i_rfix1, i_c_comp1, trunc_idx1) = generating_current_data(ibis_data, time, corner, waveform1, truncation)
+    (i_pu2, i_pd2, i_pc2, i_gc2, i_rfix2, i_c_comp2, trunc_idx2) = generating_current_data(ibis_data, time, corner, waveform2, truncation)
 
     # creating a k-parameters array with columns [time, k_u, k_d]
+    if min(trunc_idx1, trunc_idx2)>0:
+        time = time[0:-min(trunc_idx1, trunc_idx2)]
+    array_size = np.shape(time)[0]
     k_param = np.zeros([array_size, 3])
     k_param[:, 0] = time
 
@@ -419,7 +427,7 @@ def solve_k_params_output(ibis_data, corner=1, waveform_type="Rising"):
     return k_param
 
 
-def solve_k_params_output_open_drain(ibis_data, corner=1, waveform_type="Rising"):
+def solve_k_params_output_open_drain(ibis_data, corner=1, waveform_type="Rising", truncation=0):
     """
     Solves the k-parameters for the ibis model for any 2 or 3-state output buffer
 
@@ -444,7 +452,7 @@ def solve_k_params_output_open_drain(ibis_data, corner=1, waveform_type="Rising"
     array_size = np.shape(time)[0]
 
     # Getting the device and clamp current waveforms based on the new time series
-    (i_pu1, i_pd1, i_pc1, i_gc1, i_rfix1, i_c_comp1) = generating_current_data(ibis_data, time, corner, waveform1)
+    (i_pu1, i_pd1, i_pc1, i_gc1, i_rfix1, i_c_comp1) = generating_current_data(ibis_data, time, corner, waveform1, truncation)
 
     # creating a k-parameters array with columns [time, k_d]
     k_param = np.zeros([array_size, 2])
@@ -515,3 +523,23 @@ def compress_param(k_param, threshold=1e-6):
         k_comp = np.column_stack((k_comp, np.extract(condition, k_param[:, 1])))
 
     return k_comp
+
+def find_waveform_cutoff_for_truncation(vt, diff_to_trim):
+    """
+    Trunactes the k_parameter waveform by removing samples from the end of the waveform till the last sample 
+    is within a specified difference from the sample before based on percentage of the value range of the waveform.
+
+        Parameters:
+            k_param: numpy array - 2 or 3 columns: [time, Ku, Kd] or [time, K]
+            diff_to_trim: diff_to_trim value to decide if sample is redundant
+
+        Returns:
+            idx: index to trim to from the end of the time series 
+    """
+    idx = 1
+    wave_range = (max(vt)-min(vt))
+    for i in range(1, len(vt)):
+        if np.isclose(a=vt[-1], b=vt[-i-1], atol=wave_range*diff_to_trim) and np.isclose(a=vt[-i-2], b=vt[-i-1], atol=wave_range*diff_to_trim):
+            idx+=1
+        else:
+            return idx-1

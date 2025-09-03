@@ -23,7 +23,7 @@ _KD = 2
 _KD_OD = 1
 
 
-def generate_spice_model(io_type, subcircuit_type, ibis_data, corner, output_filepath):
+def generate_spice_model(io_type, subcircuit_type, ibis_data, corner, output_filepath, truncation):
     """
     Wrapper around the subcircuit file creation functions. Calls the relevant function i.e. LTSpice or Generic
 
@@ -33,6 +33,7 @@ def generate_spice_model(io_type, subcircuit_type, ibis_data, corner, output_fil
             ibis_data - a DataModel object (defined in pybis2spice.py)
             corner - "WeakSlow" or "Typical" or "FastStrong"
             output_filepath - path of output file
+            truncation - the percentage of the total range to use to truncate trailing samples in rising and falling waveforms
 
         Returns:
             The path of the created file
@@ -41,13 +42,13 @@ def generate_spice_model(io_type, subcircuit_type, ibis_data, corner, output_fil
     if io_type == "Output":
 
         if subcircuit_type == "Generic":
-            ret = create_generic_output_model(ibis_data, corner, io_type, output_filepath)
+            ret = create_generic_output_model(ibis_data, corner, io_type, output_filepath, truncation)
 
         if subcircuit_type == "LTSpice":
-            ret = create_ltspice_output_model(ibis_data, corner, io_type, output_filepath)
+            ret = create_ltspice_output_model(ibis_data, corner, io_type, output_filepath, truncation)
 
         if subcircuit_type == "ngSPICE":
-            ret = create_ngspice_output_model(ibis_data, corner, io_type, output_filepath)
+            ret = create_ngspice_output_model(ibis_data, corner, io_type, output_filepath, truncation)
 
     if io_type == "Input":
         ret = create_input_model(ibis_data, corner, io_type, output_filepath, ng=subcircuit_type=="ngSPICE")
@@ -264,7 +265,7 @@ def create_input_model(ibis_data, corner, io_type, output_filepath, ng=False):
 
     return 0
 
-def create_generic_output_model(ibis_data, corner, io_type, output_filepath):
+def create_generic_output_model(ibis_data, corner, io_type, output_filepath, truncation):
     """
     Creates a SPICE generic subcircuit model.
     Generic models are simple and only supports a single oscillation pulse with a given frequency
@@ -285,11 +286,11 @@ def create_generic_output_model(ibis_data, corner, io_type, output_filepath):
         _CORNER_INDEX = _INDEX + 1
 
         if ibis_data.model_type.lower() == "open_drain":
-            kr = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
-            kf = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
+            kr = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising", truncation=truncation)
+            kf = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling", truncation=truncation)
         else:
-            kr = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
-            kf = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
+            kr = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising", truncation=truncation)
+            kf = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling", truncation=truncation)
 
         kr = pybis2spice.compress_param(kr)
         kf = pybis2spice.compress_param(kf)
@@ -370,7 +371,7 @@ def ltspice_stimulus_netlist_setup():
     return setup_str
 
 
-def create_ltspice_output_model(ibis_data, corner, io_type, output_filepath):
+def create_ltspice_output_model(ibis_data, corner, io_type, output_filepath, truncation):
     """
     Creates a SPICE subcircuit model designed for LTSpice.
     LTSpice specific models provide extra functionality to manipulate the waveform stimulus of the output
@@ -390,11 +391,11 @@ def create_ltspice_output_model(ibis_data, corner, io_type, output_filepath):
         _CORNER_INDEX = _INDEX + 1
 
         if ibis_data.model_type.lower() == "open_drain":
-            kr = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
-            kf = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
+            kr = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising", truncation=truncation)
+            kf = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling", truncation=truncation)
         else:
-            kr = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
-            kf = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
+            kr = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising", truncation=truncation)
+            kf = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling", truncation=truncation)
 
         kr = pybis2spice.compress_param(kr)
         kf = pybis2spice.compress_param(kf)
@@ -612,7 +613,7 @@ def ngspice_stimulus_netlist_setup():
 
     return setup_str
 
-def create_ngspice_output_model(ibis_data, corner, io_type, output_filepath):
+def create_ngspice_output_model(ibis_data, corner, io_type, output_filepath, truncation):
     """
     Creates a SPICE subcircuit model designed for ngSPICE.
     ngSPICE specific models provide extra functionality to manipulate the waveform stimulus of the output
@@ -632,11 +633,11 @@ def create_ngspice_output_model(ibis_data, corner, io_type, output_filepath):
         _CORNER_INDEX = _INDEX + 1
 
         if ibis_data.model_type.lower() == "open_drain":
-            kr = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
-            kf = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
+            kr = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising", truncation=truncation)
+            kf = pybis2spice.solve_k_params_output_open_drain(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling", truncation=truncation)
         else:
-            kr = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising")
-            kf = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling")
+            kr = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Rising", truncation=truncation)
+            kf = pybis2spice.solve_k_params_output(ibis_data, corner=_CORNER_INDEX, waveform_type="Falling", truncation=truncation)
 
         kr = pybis2spice.compress_param(kr)
         kf = pybis2spice.compress_param(kf)
@@ -815,7 +816,7 @@ def create_osc_waveform_pwl(t1, k1, t2, k2, ng=False):
         for i in range(len(t1)):
             str_val = str_val + f' {{{t1[i]}}} {k1[i]}'
         
-        str_val = str_val + f' {{{t1[-1]}+{{GAP_POS*0.99}}}} {k1[-1]}'
+        str_val = str_val + f' {{{t1[-1]}+{{GAP_POS*0.25}}}} {k1[-1] + (k2[0]-k1[-1])/np.e**3} {{{t1[-1]}+{{GAP_POS*0.33}}}} {k1[-1] + (k2[0]-k1[-1])/np.e**2} {{{t1[-1]}+{{GAP_POS*0.5}}}} {k1[-1] + (k2[0]-k1[-1])/np.e}' 
 
         for i in range(len(t2)):
             str_val = str_val + f' {{{t1[-1]}+{t2[i]}+{{GAP_POS}}}} {k2[i]}'
