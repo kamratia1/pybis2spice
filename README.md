@@ -1,3 +1,5 @@
+# THIS REPOSITORY IS NO LONGER MAINTAINED
+
 # pybis2spice
 A python tool that converts IBIS models to SPICE models. The ibis model types currently supported are: 
 * Input
@@ -35,13 +37,6 @@ This is the recommended option as it provides the most flexibility for output mo
 ## Examples
 LTSpice examples are given to highlight the different options available. 
 These are available in the examples folder
-
-## Contribution
-Developers can contribute to the tool by forking the repository and submitting pull requests.
-
-## Issues and Feature Requests
-* Please record any bugs, issues and feature requests here: https://github.com/kamratia1/pybis2spice/issues
-* Detailed information on how any issue can be reproduced should be provided including any IBIS files used and version number of the program. Screenshots would also help.
 
 
 ## References
